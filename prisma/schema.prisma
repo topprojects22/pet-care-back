@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  email            String   @unique
+  name             String?
+  phone            String   @default("")
+  password         String
+  avatarPath       String   @default("uploads/default-avatar.png") @map("avatar_path")
+  roleId           Int?     @map("role_id")
+  stripeCustomerId String
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  games            Game[]
+  images           Image[]
+  role             Role?    @relation(fields: [roleId], references: [id])
+}
+
+model Game {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  value     String
+  size      String
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  slug      String   @unique
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Role {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User[]
+}
