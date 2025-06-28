@@ -21,6 +21,7 @@ model User {
   games            Game[]
   images           Image[]
   role             Role?    @relation(fields: [roleId], references: [id])
+  pets             Pet[]
 }
 
 model Game {
@@ -28,6 +29,15 @@ model Game {
   name      String   @unique
   value     String
   size      String
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Pet {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
   userId    Int?     @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

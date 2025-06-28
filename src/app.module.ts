@@ -9,6 +9,7 @@ import { PaginationModule } from './pagination/pagination.module';
 import { FilesModule } from './files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { PetModule } from './pet/pet.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { join } from 'path';
     ImageModule,
     FilesModule,
     PaginationModule,
+    PetModule
   ],
   controllers: [],
   providers: [PrismaService],
