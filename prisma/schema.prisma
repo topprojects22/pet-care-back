@@ -8,50 +8,107 @@ datasource db {
 }
 
 model User {
-  id               Int      @id @default(autoincrement())
-  email            String   @unique
-  name             String?
-  phone            String   @default("")
-  password         String
-  avatarPath       String   @default("uploads/default-avatar.png") @map("avatar_path")
-  roleId           Int?     @map("role_id")
-  stripeCustomerId String
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
-  games            Game[]
-  images           Image[]
-  role             Role?    @relation(fields: [roleId], references: [id])
-  pets             Pet[]
-}
-
-model Game {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  value     String
-  size      String
-  userId    Int?     @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  user      User?    @relation(fields: [userId], references: [id])
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  name       String?
+  phone      String   @default("")
+  password   String
+  avatarPath String   @default("uploads/default-avatar.png") @map("avatar_path")
+  roleId     Int?     @map("role_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  role       Role?    @relation(fields: [roleId], references: [id])
+  pets       Pet[]
 }
 
 model Pet {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  userId    Int?     @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  user      User?    @relation(fields: [userId], references: [id])
+  id                 Int                  @id @default(autoincrement())
+  name               String               @unique
+  userId             Int?                 @map("user_id")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  user               User?                @relation(fields: [userId], references: [id])
+  petPassport        PetPassport?
+  petCard            PetCard?
+  anymalType         AnimalType?
+  admissionVetClinic AdmissionVetClinic[]
 }
 
-model Image {
+model PetPassport {
   id        Int      @id @default(autoincrement())
-  name      String   @unique
-  slug      String   @unique
-  userId    Int?     @map("user_id")
+  petId     Int      @unique
+  typeId    Int
+  chip      Int
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  user      User?    @relation(fields: [userId], references: [id])
+  pet       Pet      @relation(fields: [petId], references: [id])
+}
+
+model PetCard {
+  id         Int      @id @default(autoincrement())
+  petId      Int      @unique
+  status     String
+  health     String
+  vaccine    String
+  totalSpent Int
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  pet        Pet      @relation(fields: [petId], references: [id])
+}
+
+model AnimalType {
+  id          Int           @id @default(autoincrement())
+  name        String
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  petId       Int           @unique
+  pet         Pet           @relation(fields: [petId], references: [id])
+  animalBreed AnimalBreed[]
+}
+
+model AnimalBreed {
+  id           Int         @id @default(autoincrement())
+  name         String      @unique
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  animalTypeId Int         @unique
+  animalType   AnimalType? @relation(fields: [animalTypeId], references: [id])
+}
+
+model Clinic {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @unique
+  serviceId          Int
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  admissionVetClinic AdmissionVetClinic[]
+  service Service[]
+}
+
+model AdmissionVetClinic {
+  id             Int      @id @default(autoincrement())
+  petId          Int
+  clinicId       Int
+  procedure      String
+  description    String
+  diagnosis      String
+  reccomendation String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  pet            Pet      @relation(fields: [petId], references: [id])
+  clinic         Clinic   @relation(fields: [clinicId], references: [id])
+}
+
+model Service {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  description   String
+  recomendation String
+  price         Int
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  clinicId Int @unique
+  clinic Clinic @relation(fields: [clinicId], references: [id])
 }
 
 model Role {
