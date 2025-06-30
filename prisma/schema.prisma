@@ -67,10 +67,10 @@ model AnimalType {
 
 model AnimalBreed {
   id           Int         @id @default(autoincrement())
-  name         String      @unique
+  name         String      // TODO вернуть уникальность
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
-  animalTypeId Int         @unique
+  animalTypeId Int        // TODO вернуть уникальность
   animalType   AnimalType? @relation(fields: [animalTypeId], references: [id])
 }
 
@@ -105,13 +105,13 @@ model Service {
   price         Int
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
-  clinicId      Int      @unique
+  clinicId      Int      // TODO вернуть уникальность
   clinic        Clinic   @relation(fields: [clinicId], references: [id])
 }
 
 model Role {
   id        Int      @id @default(autoincrement())
-  name      String   @unique
+  name      String   // TODO вернуть уникальность
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   user      User[]

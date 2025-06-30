@@ -22,7 +22,25 @@ const createUsers = async (quantity: number) => {
         password: await hash("Qwerty123@"),
       },
     });
-    createPet(user.id);
+
+    for (
+      let petitem = 0;
+      petitem < Math.floor(Math.random() * 3) + 1;
+      petitem++
+    ) {
+      let pet = await createPet(user.id);
+      let clinicId = 0;
+      await prisma.clinic.findMany().then((data) => {
+        clinicId = data[Math.floor(Math.random() * data.length)].id;
+      });
+
+      createAdmissionVetClinic(
+        Math.floor(Math.random() * 3) + 1,
+        clinicId,
+        pet.id
+      );
+    }
+
     users.push(user);
   }
 
@@ -48,10 +66,27 @@ const createRoles = async (quantity: number) => {
 };
 
 const main = async () => {
+  const tables = [
+    "AdmissionVetClinic",
+    "PetCard",
+    "PetPassport",
+    "Pet",
+    "Service",
+    "Clinic",
+    "AnimalBreed",
+    "AnimalType",
+    "User",
+    "Role",
+  ];
+
+  for (const table of tables) {
+    await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE`);
+  }
+
   console.log("Start seeding...");
-  await createUsers(3);
-  await createAnimalType(3);
   await createClinic(3);
+  await createAnimalType(3);
+  await createUsers(3);
   // await createRoles(10);
 };
 
@@ -62,6 +97,7 @@ main()
   });
 
 const createPet = async (userId: number) => {
+  const animalType =await prisma.animalType.findMany();
   const pet = await prisma.pet.create({
     data: {
       name: faker.animal.cat(),
@@ -70,11 +106,17 @@ const createPet = async (userId: number) => {
           id: userId,
         },
       },
+      animalType: {
+        connect: {
+          id: animalType[Math.floor(Math.random() * animalType.length)].id,
+        },
+      },
     },
   });
   createPetPassport(pet.id);
   createPetCard(pet.id);
-}
+  return pet;
+};
 
 const createPetPassport = async (petId: number) => {
   const petPassport = await prisma.petPassport.create({
@@ -87,7 +129,7 @@ const createPetPassport = async (petId: number) => {
       chip: randomNumber(100000, 999999),
     },
   });
-}
+};
 
 const createPetCard = async (petId: number) => {
   const petCard = await prisma.petCard.create({
@@ -103,7 +145,7 @@ const createPetCard = async (petId: number) => {
       totalSpent: randomNumber(100, 1000),
     },
   });
-}
+};
 
 const createAnimalType = async (quantity: number) => {
   for (let item = 0; item < quantity; item++) {
@@ -114,7 +156,7 @@ const createAnimalType = async (quantity: number) => {
     });
     createAnimalBreed(3, animalType.id);
   }
-}
+};
 
 const createAnimalBreed = async (quantity: number, animalTypeId: number) => {
   for (let item = 0; item < quantity; item++) {
@@ -129,7 +171,7 @@ const createAnimalBreed = async (quantity: number, animalTypeId: number) => {
       },
     });
   }
-}
+};
 
 const createClinic = async (quantity: number) => {
   for (let item = 0; item < quantity; item++) {
@@ -140,7 +182,7 @@ const createClinic = async (quantity: number) => {
     });
     createService(3, clinic.id);
   }
-}
+};
 
 const createService = async (quantity: number, clinicId: number) => {
   for (let item = 0; item < quantity; item++) {
@@ -154,18 +196,22 @@ const createService = async (quantity: number, clinicId: number) => {
           connect: {
             id: clinicId,
           },
-        }
+        },
       },
     });
   }
-}
+};
 
-const createAdmissionVetClinic = async (quantity: number, clinicId: number, petId: number) => {
+const createAdmissionVetClinic = async (
+  quantity: number,
+  clinicId: number,
+  petId: number
+) => {
   for (let item = 0; item < quantity; item++) {
     await prisma.admissionVetClinic.create({
       data: {
         description: faker.company.catchPhrase(),
-        reccomendation: faker.lorem.sentence(),
+        recomendation: faker.lorem.sentence(),
         procedure: faker.lorem.sentence(),
         diagnosis: faker.lorem.sentence(),
         clinic: {
@@ -177,8 +223,8 @@ const createAdmissionVetClinic = async (quantity: number, clinicId: number, petI
           connect: {
             id: petId,
           },
-        }
+        },
       },
     });
   }
-}
+};
