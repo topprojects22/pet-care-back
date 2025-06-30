@@ -58,7 +58,7 @@ export class AuthController {
     return this.authService.register(registerAuthDto);
   }
   @UsePipes(new ValidationPipe())
-  @Post('login/access-token')
+  @Post('refresh')
   getNewToken(@Body() accessTokenAuthDto: AccessTokenAuthDto) {
     return this.authService.getNewToken(accessTokenAuthDto);
   }

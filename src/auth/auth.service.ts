@@ -121,12 +121,12 @@ export class AuthService {
   private async issueToken(userId: number, role: string) {
     const data = { id: userId, role: role };
     const accessToken = this.jwt.sign(data, {
-      expiresIn: '1h',
+      expiresIn: '20s',
     });
     const refreshToken = this.jwt.sign(data, {
-      expiresIn: '7d',
+      expiresIn: '1m',
     });
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, expiresAt: '20s' };
   }
   private returnUserFields(user: User) {
     return {

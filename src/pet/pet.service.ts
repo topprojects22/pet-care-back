@@ -21,6 +21,7 @@ export class PetService {
     if (!petList) {
       return [];
     }
+    console.log(  'petList', petList);
     return petList;
   }
 
