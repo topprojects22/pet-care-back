@@ -17,24 +17,9 @@ const createUsers = async (quantity: number) => {
 
     const user = await prisma.user.create({
       data: {
-        stripeCustomerId: randomNumber(1, 1000001).toString(),
         name: userName,
         email: userEmail,
         password: await hash('Qwerty123@'),
-        games: {
-          create: Array.from({ length: randomNumber(2, 6) }).map(
-            (_, index) => ({
-              name: faker.finance.accountName() + item + index,
-              value: Array.from({ length: randomNumber(2, 6) })
-                .map(
-                  (_, index) =>
-                    `${Math.floor(Math.random() * 10) + 1}.${index}.1;`,
-                )
-                .join(),
-              size: '12:12',
-            }),
-          ),
-        },
       },
     });
     users.push(user);

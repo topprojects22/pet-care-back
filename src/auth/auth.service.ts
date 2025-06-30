@@ -71,7 +71,6 @@ export class AuthService {
         avatarPath: faker.image.avatar(),
         phone: faker.phone.number('+7 (###) ###-##-##'),
         password: await hash(registerAuthDto.password),
-        stripeCustomerId: '',
       },
     });
 
@@ -102,7 +101,6 @@ export class AuthService {
         phone: true,
         createdAt: true,
         updatedAt: true,
-        stripeCustomerId: true,
         role: {
           select: {
             name: true,
@@ -149,7 +147,6 @@ export class AuthService {
         phone: true,
         createdAt: true,
         updatedAt: true,
-        stripeCustomerId: true,
         role: {
           select: {
             name: true,
