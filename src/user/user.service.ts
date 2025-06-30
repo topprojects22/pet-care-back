@@ -20,21 +20,6 @@ export class UserService {
       },
       select: {
         ...returnUserObject,
-        games: {
-          select: {
-            id: true,
-            name: true,
-            value: true,
-            size: true,
-            updatedAt: true,
-          },
-        },
-        images: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
         role: {
           select: {
             name: true,

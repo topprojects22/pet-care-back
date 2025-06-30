@@ -3,10 +3,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaService } from './prisma.service';
 import { ConfigModule } from '@nestjs/config';
-import { GameModule } from './game/game.module';
-import { ImageModule } from './image/image.module';
 import { PaginationModule } from './pagination/pagination.module';
-import { FilesModule } from './files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { PetModule } from './pet/pet.module';
@@ -21,9 +18,6 @@ import { PetModule } from './pet/pet.module';
     }),
     UserModule,
     AuthModule,
-    GameModule,
-    ImageModule,
-    FilesModule,
     PaginationModule,
     PetModule
   ],

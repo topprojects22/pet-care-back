@@ -23,21 +23,21 @@ model User {
 
 model Pet {
   id                 Int                  @id @default(autoincrement())
-  name               String               @unique
+  name               String
   userId             Int?                 @map("user_id")
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
   user               User?                @relation(fields: [userId], references: [id])
   petPassport        PetPassport?
   petCard            PetCard?
-  anymalType         AnimalType?
   admissionVetClinic AdmissionVetClinic[]
+  animalType         AnimalType?          @relation(fields: [animalTypeId], references: [id])
+  animalTypeId       Int?
 }
 
 model PetPassport {
   id        Int      @id @default(autoincrement())
   petId     Int      @unique
-  typeId    Int
   chip      Int
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -61,9 +61,8 @@ model AnimalType {
   name        String
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
-  petId       Int           @unique
-  pet         Pet           @relation(fields: [petId], references: [id])
   animalBreed AnimalBreed[]
+  pets        Pet[]
 }
 
 model AnimalBreed {
@@ -77,12 +76,11 @@ model AnimalBreed {
 
 model Clinic {
   id                 Int                  @id @default(autoincrement())
-  name               String               @unique
-  serviceId          Int
+  name               String              
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
   admissionVetClinic AdmissionVetClinic[]
-  service Service[]
+  service            Service[]
 }
 
 model AdmissionVetClinic {
@@ -92,7 +90,7 @@ model AdmissionVetClinic {
   procedure      String
   description    String
   diagnosis      String
-  reccomendation String
+  recomendation String
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   pet            Pet      @relation(fields: [petId], references: [id])
@@ -101,14 +99,14 @@ model AdmissionVetClinic {
 
 model Service {
   id            Int      @id @default(autoincrement())
-  name          String   @unique
+  name          String  
   description   String
   recomendation String
   price         Int
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
-  clinicId Int @unique
-  clinic Clinic @relation(fields: [clinicId], references: [id])
+  clinicId      Int      @unique
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
 }
 
 model Role {
