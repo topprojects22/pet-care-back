@@ -41,6 +41,14 @@ const createUsers = async (quantity: number) => {
       );
     }
 
+    const petList = await prisma.pet.findMany({ where: { userId: user.id } });
+
+    createNotification(
+      Math.floor(Math.random() * 3) + 1,
+      petList[Math.floor(Math.random() * petList.length)].id,
+      user.id
+    );
+
     users.push(user);
   }
 
@@ -77,6 +85,7 @@ const main = async () => {
     "AnimalType",
     "User",
     "Role",
+    "Notification",
   ];
 
   for (const table of tables) {
@@ -97,7 +106,7 @@ main()
   });
 
 const createPet = async (userId: number) => {
-  const animalType =await prisma.animalType.findMany();
+  const animalType = await prisma.animalType.findMany();
   const pet = await prisma.pet.create({
     data: {
       name: faker.animal.cat(),
@@ -222,6 +231,32 @@ const createAdmissionVetClinic = async (
         pet: {
           connect: {
             id: petId,
+          },
+        },
+      },
+    });
+  }
+};
+
+const createNotification = async (
+  quantity: number,
+  petId: number,
+  userId: number
+) => {
+  for (let item = 0; item < quantity; item++) {
+    await prisma.notification.create({
+      data: {
+        name: faker.company.name(),
+        description: faker.company.catchPhrase(),
+        type: "hight",
+        pets: {
+          connect: {
+            id: petId,
+          },
+        },
+        user: {
+          connect: {
+            id: userId,
           },
         },
       },
