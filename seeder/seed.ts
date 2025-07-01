@@ -24,9 +24,9 @@ const createUsers = async (quantity: number) => {
     });
 
     for (
-      let petitem = 0;
-      petitem < Math.floor(Math.random() * 3) + 1;
-      petitem++
+      let petItem = 0;
+      petItem < Math.floor(Math.random() * 3) + 1;
+      petItem++
     ) {
       let pet = await createPet(user.id);
       let clinicId = 0;
