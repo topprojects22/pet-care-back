@@ -228,3 +228,36 @@ const createAdmissionVetClinic = async (
     });
   }
 };
+
+const createNotification = async (
+  quantity: number,
+  petId: number,
+  userId: number
+) => {
+  for (let item = 0; item < quantity; item++) {
+    await prisma.notification.create({
+      data: {
+        name: faker.company.name(),
+        description: faker.company.catchPhrase(),
+        type: "hight",
+        petOnNotification: {
+          create: [
+            {
+              pet: {
+                connect: {
+                  id: petId,
+                },
+              },
+              assignedBy: "System",
+            },
+          ],
+        },
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+      },
+    });
+  }
+};

@@ -7,6 +7,7 @@ import { PaginationModule } from './pagination/pagination.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { PetModule } from './pet/pet.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { PetModule } from './pet/pet.module';
     UserModule,
     AuthModule,
     PaginationModule,
-    PetModule
+    PetModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [PrismaService],

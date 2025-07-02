@@ -8,17 +8,18 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  name       String?
-  phone      String   @default("")
-  password   String
-  avatarPath String   @default("uploads/default-avatar.png") @map("avatar_path")
-  roleId     Int?     @map("role_id")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-  role       Role?    @relation(fields: [roleId], references: [id])
-  pets       Pet[]
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  name         String?
+  phone        String         @default("")
+  password     String
+  avatarPath   String         @default("uploads/default-avatar.png") @map("avatar_path")
+  roleId       Int?           @map("role_id")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  role         Role?          @relation(fields: [roleId], references: [id])
+  pets         Pet[]
+  Notification Notification[]
 }
 
 model Pet {
@@ -33,6 +34,7 @@ model Pet {
   admissionVetClinic AdmissionVetClinic[]
   animalType         AnimalType?          @relation(fields: [animalTypeId], references: [id])
   animalTypeId       Int?
+  petOnNotification  PetOnNotification[]
 }
 
 model PetPassport {
@@ -67,16 +69,16 @@ model AnimalType {
 
 model AnimalBreed {
   id           Int         @id @default(autoincrement())
-  name         String      // TODO вернуть уникальность
+  name         String // TODO вернуть уникальность
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
-  animalTypeId Int        // TODO вернуть уникальность
+  animalTypeId Int // TODO вернуть уникальность
   animalType   AnimalType? @relation(fields: [animalTypeId], references: [id])
 }
 
 model Clinic {
   id                 Int                  @id @default(autoincrement())
-  name               String              
+  name               String
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
   admissionVetClinic AdmissionVetClinic[]
@@ -84,35 +86,65 @@ model Clinic {
 }
 
 model AdmissionVetClinic {
-  id             Int      @id @default(autoincrement())
-  petId          Int
-  clinicId       Int
-  procedure      String
-  description    String
-  diagnosis      String
+  id            Int      @id @default(autoincrement())
+  petId         Int
+  clinicId      Int
+  procedure     String
+  description   String
+  diagnosis     String
   recomendation String
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-  pet            Pet      @relation(fields: [petId], references: [id])
-  clinic         Clinic   @relation(fields: [clinicId], references: [id])
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  pet           Pet      @relation(fields: [petId], references: [id])
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
 }
 
 model Service {
   id            Int      @id @default(autoincrement())
-  name          String  
+  name          String
   description   String
   recomendation String
   price         Int
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
-  clinicId      Int      // TODO вернуть уникальность
+  clinicId      Int // TODO вернуть уникальность
   clinic        Clinic   @relation(fields: [clinicId], references: [id])
 }
 
 model Role {
   id        Int      @id @default(autoincrement())
-  name      String   // TODO вернуть уникальность
+  name      String   @unique
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   user      User[]
+}
+
+model Notification {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  description       String
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  expiriedAt        DateTime?
+  type              NotificationType
+  userId            Int
+  user              User                @relation(fields: [userId], references: [id])
+  petOnNotification PetOnNotification[]
+}
+
+enum NotificationType {
+  hight
+  medium
+  low
+}
+
+model PetOnNotification {
+  pet            Pet          @relation(fields: [petId], references: [id])
+  petId          Int
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  notificationId Int
+  assignedAt     DateTime     @default(now())
+  assignedBy     String
+
+  @@id([petId, notificationId])
 }
