@@ -249,10 +249,17 @@ const createNotification = async (
         name: faker.company.name(),
         description: faker.company.catchPhrase(),
         type: "hight",
-        pets: {
-          connect: {
-            id: petId,
-          },
+        petOnNotification: {
+          create: [
+            {
+              pet: {
+                connect: {
+                  id: petId,
+                },
+              },
+              assignedBy: "System",
+            },
+          ],
         },
         user: {
           connect: {

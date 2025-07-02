@@ -21,7 +21,7 @@ export class PetController {
   @Post('get')
   @Auth()
   async getAll(@Body() petDto: RequestPetDto) {
-    return this.petService.getAll(petDto.userId);
+    return this.petService.getAllPets(petDto.userId);
   }
 
   @UsePipes(new ValidationPipe())

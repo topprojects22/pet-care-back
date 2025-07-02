@@ -11,7 +11,7 @@ export class PetService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async getAll(userId: number) {
+  async getAllPets(userId: number) {
     const petList = await this.prisma.pet.findMany({
       where: {
         userId,
@@ -21,7 +21,6 @@ export class PetService {
     if (!petList) {
       return [];
     }
-    console.log(  'petList', petList);
     return petList;
   }
 

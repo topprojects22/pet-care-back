@@ -34,8 +34,7 @@ model Pet {
   admissionVetClinic AdmissionVetClinic[]
   animalType         AnimalType?          @relation(fields: [animalTypeId], references: [id])
   animalTypeId       Int?
-  notification       Notification[]
-  PetOnNotification  PetOnNotification[]
+  petOnNotification  PetOnNotification[]
 }
 
 model PetPassport {
@@ -114,7 +113,7 @@ model Service {
 
 model Role {
   id        Int      @id @default(autoincrement())
-  name      String // TODO вернуть уникальность
+  name      String   @unique
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   user      User[]
@@ -130,8 +129,7 @@ model Notification {
   type              NotificationType
   userId            Int
   user              User                @relation(fields: [userId], references: [id])
-  pets              Pet[]
-  PetOnNotification PetOnNotification[]
+  petOnNotification PetOnNotification[]
 }
 
 enum NotificationType {
