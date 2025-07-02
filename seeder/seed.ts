@@ -24,9 +24,9 @@ const createUsers = async (quantity: number) => {
     });
 
     for (
-      let petitem = 0;
-      petitem < Math.floor(Math.random() * 3) + 1;
-      petitem++
+      let petItem = 0;
+      petItem < Math.floor(Math.random() * 3) + 1;
+      petItem++
     ) {
       let pet = await createPet(user.id);
       let clinicId = 0;
@@ -40,6 +40,14 @@ const createUsers = async (quantity: number) => {
         pet.id
       );
     }
+
+    const petList = await prisma.pet.findMany({ where: { userId: user.id } });
+
+    createNotification(
+      Math.floor(Math.random() * 3) + 1,
+      petList[Math.floor(Math.random() * petList.length)].id,
+      user.id
+    );
 
     users.push(user);
   }
@@ -77,6 +85,7 @@ const main = async () => {
     "AnimalType",
     "User",
     "Role",
+    "Notification",
   ];
 
   for (const table of tables) {
@@ -97,7 +106,7 @@ main()
   });
 
 const createPet = async (userId: number) => {
-  const animalType =await prisma.animalType.findMany();
+  const animalType = await prisma.animalType.findMany();
   const pet = await prisma.pet.create({
     data: {
       name: faker.animal.cat(),

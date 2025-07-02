@@ -19,7 +19,7 @@ model User {
   updatedAt    DateTime       @updatedAt @map("updated_at")
   role         Role?          @relation(fields: [roleId], references: [id])
   pets         Pet[]
-  Notification Notification[]
+  notification Notification[]
 }
 
 model Pet {
