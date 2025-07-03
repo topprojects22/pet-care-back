@@ -3,29 +3,29 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+} from "@nestjs/common";
+import { CreateAuthDto } from "./dto/create-auth.dto";
+import { UpdateAuthDto } from "./dto/update-auth.dto";
 import {
   LoginAuthDto,
   AccessTokenAuthDto,
   RegisterAuthDto,
-} from './dto/auth.dto';
-import { PrismaService } from '../prisma.service';
-import { faker } from '@faker-js/faker';
-import { hash, verify } from 'argon2';
-import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+} from "./dto/auth.dto";
+import { PrismaService } from "../prisma.service";
+import { faker } from "@faker-js/faker";
+import { hash, verify } from "argon2";
+import { JwtService } from "@nestjs/jwt";
+import { User } from "@prisma/client";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwt: JwtService,
+    private readonly jwt: JwtService
   ) {}
 
   create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+    return "This action adds a new auth";
   }
 
   findAll() {
@@ -61,7 +61,7 @@ export class AuthService {
       },
     });
     if (existUser) {
-      throw new BadRequestException('User already exist');
+      throw new BadRequestException("User already exist");
     }
 
     const user = await this.prisma.user.create({
@@ -69,12 +69,12 @@ export class AuthService {
         email: registerAuthDto.email,
         name: faker.name.firstName(),
         avatarPath: faker.image.avatar(),
-        phone: faker.phone.number('+7 (###) ###-##-##'),
+        phone: faker.phone.number("+7 (###) ###-##-##"),
         password: await hash(registerAuthDto.password),
       },
     });
 
-    const tokens = await this.issueToken(user.id, 'user');
+    const tokens = await this.issueToken(user.id, "user");
 
     const userFields = this.returnUserFields(user);
     return {
@@ -85,7 +85,7 @@ export class AuthService {
   async getNewToken(accessTokenAuthDto: AccessTokenAuthDto) {
     const result = await this.jwt.verifyAsync(accessTokenAuthDto.refreshToken);
     if (!result) {
-      throw new UnauthorizedException('Invalid access token');
+      throw new UnauthorizedException("Invalid access token");
     }
     const user = await this.prisma.user.findUnique({
       where: {
@@ -106,6 +106,18 @@ export class AuthService {
             name: true,
           },
         },
+        lastName: true,
+        middleName: true,
+        lastLoginAt: true,
+        isVerified: true,
+        birthDate: true,
+        address: true,
+        emergencyContact: true,
+        preferences: true,
+        insuranceNumber: true,
+        socialMedia: true,
+        isSubscribed: true,
+        lastActivityAt: true,
       },
     });
     const tokens = await this.issueToken(user.id, user.role.name);
@@ -119,12 +131,12 @@ export class AuthService {
   private async issueToken(userId: number, role: string) {
     const data = { id: userId, role: role };
     const accessToken = this.jwt.sign(data, {
-      expiresIn: '20s',
+      expiresIn: "5m",
     });
     const refreshToken = this.jwt.sign(data, {
-      expiresIn: '1m',
+      expiresIn: "100m",
     });
-    return { accessToken, refreshToken, expiresAt: '20s' };
+    return { accessToken, refreshToken, expiresAt: "20s" };
   }
   private returnUserFields(user: User) {
     return {
@@ -152,14 +164,26 @@ export class AuthService {
             name: true,
           },
         },
+        lastName: true,
+        middleName: true,
+        lastLoginAt: true,
+        isVerified: true,
+        birthDate: true,
+        address: true,
+        emergencyContact: true,
+        preferences: true,
+        insuranceNumber: true,
+        socialMedia: true,
+        isSubscribed: true,
+        lastActivityAt: true,
       },
     });
     if (!user) {
-      throw new NotFoundException('User dont exist');
+      throw new NotFoundException("User dont exist");
     }
     const isValid = await verify(user.password, loginDto.password);
     if (!isValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
     return user;
   }

@@ -1,22 +1,72 @@
-import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+  MinLength,
+  IsBoolean,
+} from "class-validator";
 
-export class UpdateProfileDto {
+// update-user.dto.ts
+export class UpdateUserDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @IsOptional()
   @IsString()
-  password: string;
+  address?: string;
 
   @IsOptional()
   @IsString()
-  name: string;
+  emergencyContact?: string;
+}
+
+// user-preferences.dto.ts
+export class UserPreferencesDto {
+  @IsOptional()
+  @IsBoolean()
+  emailNotifications?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  pushNotifications?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  smsNotifications?: boolean;
 
   @IsOptional()
   @IsString()
-  phone: string;
+  language?: string;
 
   @IsOptional()
   @IsString()
-  avatarPath: string;
+  theme?: string;
+}
+
+// change-password.dto.ts
+export class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  oldPassword: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  newPassword: string;
 }

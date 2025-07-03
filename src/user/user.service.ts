@@ -1,63 +1,107 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
-import { returnUserObject } from '../auth/dto/return-user.object';
-import { UpdateProfileDto } from './dto/user.dto';
-import { Prisma } from '@prisma/client';
-import { hash } from 'argon2';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma.service";
+import { ChangePasswordDto } from "./dto/user.dto";
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  async getUserProfile(id: number, selectObject: Prisma.UserSelect = {}) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: id,
-      },
-      select: {
-        ...returnUserObject,
-        role: {
-          select: {
-            name: true,
+  // Получение профиля пользователя
+  async getUserProfile(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        pets: {
+          take: 3,
+          orderBy: { createdAt: "desc" },
+          include: {
+            photos: {
+              where: { isPrimary: true },
+              take: 1,
+            },
           },
         },
-        ...selectObject,
-      },
-    });
-    if (!user) {
-      throw new Error('User not found');
-    }
-    return user;
-  }
-  async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
-    const isSameUser = await this.prisma.user.findUnique({
-      where: { email: updateProfileDto.email },
-    });
-    if (isSameUser && id !== isSameUser.id) {
-      throw new BadRequestException('Email already in use');
-    }
-    const user = await this.getUserProfile(id);
-    return await this.prisma.user.update({
-      where: {
-        id: id,
-      },
-      data: {
-        email: updateProfileDto.email,
-        name: updateProfileDto.name,
-        avatarPath: updateProfileDto.avatarPath,
-        phone: updateProfileDto.phone,
-        password: updateProfileDto.password
-          ? await hash(updateProfileDto.password)
-          : user.password,
+        preferredClinics: {
+          take: 3,
+        },
       },
     });
   }
 
-  async getAllUsers() {
-    return [];
+  // Обновление профиля пользователя
+  async updateUserProfile(id: number, userData: any) {
+    return this.prisma.user.update({
+      where: { id },
+      data: userData,
+    });
+  }
+
+  // Получение настроек пользователя
+  async getUserPreferences(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { preferences: true },
+    });
+    return user.preferences;
+  }
+
+  // Обновление настроек пользователя
+  async updateUserPreferences(id: number, preferences: any) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { preferences },
+    });
+  }
+
+  // Получение избранных клиник
+  async getUserFavoriteClinics(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        preferredClinics: true,
+      },
+    });
+  }
+
+  // Добавление клиники в избранное
+  async addFavoriteClinic(userId: number, clinicId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        preferredClinics: {
+          connect: { id: clinicId },
+        },
+      },
+    });
+  }
+
+  // Удаление клиники из избранного
+  async removeFavoriteClinic(userId: number, clinicId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        preferredClinics: {
+          disconnect: { id: clinicId },
+        },
+      },
+    });
+  }
+
+  async changePassword(userId: number, passwordData: ChangePasswordDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { password: passwordData.newPassword },
+    });
+  }
+
+  async toggleFavoriteClinic(userId: number, clinicId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { preferredClinics: { where: { id: clinicId } } },
+    });
+    if (user.preferredClinics.length === 0) {
+      return this.addFavoriteClinic(userId, clinicId);
+    }
+    return this.removeFavoriteClinic(userId, clinicId);
   }
 }
