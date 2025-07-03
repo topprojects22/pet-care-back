@@ -8,18 +8,37 @@ datasource db {
 }
 
 model User {
-  id           Int            @id @default(autoincrement())
-  email        String         @unique
-  name         String?
-  phone        String         @default("")
-  password     String
-  avatarPath   String         @default("uploads/default-avatar.png") @map("avatar_path")
-  roleId       Int?           @map("role_id")
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
-  role         Role?          @relation(fields: [roleId], references: [id])
-  pets         Pet[]
-  notification Notification[]
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  name             String?
+  lastName         String?   @map("last_name")
+  middleName       String?   @map("middle_name")
+  phone            String    @default("")
+  password         String
+  avatarPath       String    @default("uploads/default-avatar.png") @map("avatar_path")
+  roleId           Int?      @map("role_id")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  lastLoginAt      DateTime? @map("last_login_at")
+  isVerified       Boolean   @default(false) @map("is_verified")
+  birthDate        DateTime? @map("birth_date")
+  address          String?
+  emergencyContact String?   @map("emergency_contact")
+  insuranceNumber  String?   @map("insurance_number")
+  preferences      Json?
+  socialMedia      Json?     @map("social_media")
+  isSubscribed     Boolean   @default(true) @map("is_subscribed")
+  lastActivityAt   DateTime? @map("last_activity_at")
+
+  role               Role?                @relation(fields: [roleId], references: [id])
+  pets               Pet[]
+  notification       Notification[]
+  preferredClinics   Clinic[]             @relation("UserPreferredClinics")
+  payments           Payment[]
+  reviews            Review[]
+  petBoarding        PetBoarding[]
+  petBoardingBooking PetBoardingBooking[]
+  petBoardingReview  PetBoardingReview[]
 }
 
 model Pet {
@@ -35,6 +54,18 @@ model Pet {
   animalType         AnimalType?          @relation(fields: [animalTypeId], references: [id])
   animalTypeId       Int?
   petOnNotification  PetOnNotification[]
+  medications        Medication[]
+  vaccinations       Vaccination[]
+  photos             PetPhoto[]
+  healthMetrics      HealthMetric[]
+  groomingRecords    GroomingRecord[]
+  petBoardingBooking PetBoardingBooking[]
+}
+
+enum PetGender {
+  MALE
+  FEMALE
+  OTHER
 }
 
 model PetPassport {
@@ -68,12 +99,23 @@ model AnimalType {
 }
 
 model AnimalBreed {
-  id           Int         @id @default(autoincrement())
-  name         String // TODO вернуть уникальность
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
-  animalTypeId Int // TODO вернуть уникальность
-  animalType   AnimalType? @relation(fields: [animalTypeId], references: [id])
+  id             Int        @id @default(autoincrement())
+  name           String
+  description    String?
+  sizeCategory   BreedSize? @map("size_category")
+  lifeExpectancy Int?       @map("life_expectancy")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  animalTypeId   Int        @map("animal_type_id")
+
+  animalType  AnimalType?   @relation(fields: [animalTypeId], references: [id])
+  petPassport PetPassport[]
+}
+
+enum BreedSize {
+  SMALL
+  MEDIUM
+  LARGE
 }
 
 model Clinic {
@@ -83,6 +125,10 @@ model Clinic {
   updatedAt          DateTime             @updatedAt @map("updated_at")
   admissionVetClinic AdmissionVetClinic[]
   service            Service[]
+  preferredBy        User[]               @relation("UserPreferredClinics")
+  vaccination        Vaccination[]
+  staff              StaffMember[]
+  reviews            Review[]
 }
 
 model AdmissionVetClinic {
@@ -93,10 +139,24 @@ model AdmissionVetClinic {
   description   String
   diagnosis     String
   recomendation String
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  pet           Pet      @relation(fields: [petId], references: [id])
-  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  visitDate     DateTime  @map("visit_date")
+  nextVisitDate DateTime? @map("next_visit_date")
+  doctorName    String?   @map("doctor_name")
+  medications   String?
+  cost          Float
+  files         String[]
+  temperature   Float?
+  pulse         Int?
+  respiration   Int?
+  weight        Float?
+  anesthesia    String?
+  complications String?
+  status        String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  pet    Pet    @relation(fields: [petId], references: [id])
+  clinic Clinic @relation(fields: [clinicId], references: [id])
 }
 
 model Service {
@@ -147,4 +207,220 @@ model PetOnNotification {
   assignedBy     String
 
   @@id([petId, notificationId])
+}
+
+model Medication {
+  id          Int       @id @default(autoincrement())
+  name        String
+  dosage      String
+  frequency   String
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  description String?
+  petId       Int       @map("pet_id")
+
+  pet       Pet      @relation(fields: [petId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model Vaccination {
+  id          Int       @id @default(autoincrement())
+  name        String
+  date        DateTime
+  nextDate    DateTime? @map("next_date")
+  clinicId    Int?      @map("clinic_id")
+  petId       Int       @map("pet_id")
+  description String?
+  files       String[]
+
+  clinic    Clinic?  @relation(fields: [clinicId], references: [id])
+  pet       Pet      @relation(fields: [petId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model PetPhoto {
+  id        Int     @id @default(autoincrement())
+  url       String
+  petId     Int     @map("pet_id")
+  isPrimary Boolean @default(false) @map("is_primary")
+
+  pet       Pet      @relation(fields: [petId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model HealthMetric {
+  id         Int      @id @default(autoincrement())
+  petId      Int      @map("pet_id")
+  metricType String   @map("metric_type")
+  value      Float
+  measuredAt DateTime @default(now()) @map("measured_at")
+  notes      String?
+
+  pet Pet @relation(fields: [petId], references: [id])
+}
+
+model GroomingRecord {
+  id          Int       @id @default(autoincrement())
+  petId       Int       @map("pet_id")
+  serviceType String    @map("service_type")
+  status      String?
+  date        DateTime
+  nextDate    DateTime? @map("next_date")
+  groomerName String?   @map("groomer_name")
+  notes       String?
+  cost        Float?
+
+  pet Pet @relation(fields: [petId], references: [id])
+}
+
+model StaffMember {
+  id        Int     @id @default(autoincrement())
+  clinicId  Int     @map("clinic_id")
+  name      String
+  position  String
+  specialty String?
+  phone     String?
+  email     String?
+  isActive  Boolean @default(true) @map("is_active")
+
+  clinic Clinic @relation(fields: [clinicId], references: [id])
+}
+
+model Payment {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  serviceId     Int?     @map("service_id")
+  amount        Float
+  paymentDate   DateTime @default(now()) @map("payment_date")
+  method        String
+  status        String   @default("completed")
+  invoiceNumber String?  @map("invoice_number")
+
+  user    User     @relation(fields: [userId], references: [id])
+  service Service? @relation(fields: [serviceId], references: [id])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  clinicId  Int?     @map("clinic_id")
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User    @relation(fields: [userId], references: [id])
+  clinic Clinic? @relation(fields: [clinicId], references: [id])
+}
+
+model PetBoarding {
+  id             Int      @id @default(autoincrement())
+  name           String
+  description    String
+  address        String
+  phone          String
+  email          String
+  website        String?
+  geoCoordinates String?  @map("geo_coordinates")
+  photos         String[]
+  rating         Float?
+  pricePerDay    Float    @map("price_per_day")
+  capacity       Int
+  availableSpots Int      @map("available_spots")
+  amenities      String[]
+  rules          String[]
+  checkInTime    String   @map("check_in_time")
+  checkOutTime   String   @map("check_out_time")
+  isActive       Boolean  @default(true) @map("is_active")
+  userId         Int      @map("user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user     User                 @relation(fields: [userId], references: [id])
+  bookings PetBoardingBooking[]
+  reviews  PetBoardingReview[]
+  staff    PetBoardingStaff[]
+}
+
+model PetBoardingBooking {
+  id              Int           @id @default(autoincrement())
+  petId           Int           @map("pet_id")
+  boardingId      Int           @map("boarding_id")
+  startDate       DateTime      @map("start_date")
+  endDate         DateTime      @map("end_date")
+  status          BookingStatus @default(PENDING)
+  specialRequests String?       @map("special_requests")
+  totalPrice      Float         @map("total_price")
+  paymentStatus   PaymentStatus @default(PENDING) @map("payment_status")
+  userId          Int           @map("user_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  pet               Pet                  @relation(fields: [petId], references: [id])
+  boarding          PetBoarding          @relation(fields: [boardingId], references: [id])
+  user              User                 @relation(fields: [userId], references: [id])
+  payments          PetBoardingPayment[]
+  petBoardingReview PetBoardingReview[]
+}
+
+model PetBoardingPayment {
+  id            Int           @id @default(autoincrement())
+  bookingId     Int           @map("booking_id")
+  amount        Float
+  paymentDate   DateTime      @default(now()) @map("payment_date")
+  paymentMethod PaymentMethod @map("payment_method")
+  transactionId String?       @map("transaction_id")
+  status        PaymentStatus
+  notes         String?
+
+  booking PetBoardingBooking @relation(fields: [bookingId], references: [id])
+}
+
+model PetBoardingReview {
+  id        Int      @id @default(autoincrement())
+  bookingId Int      @map("booking_id")
+  rating    Int
+  comment   String?
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  booking       PetBoardingBooking @relation(fields: [bookingId], references: [id])
+  user          User               @relation(fields: [userId], references: [id])
+  petBoarding   PetBoarding?       @relation(fields: [petBoardingId], references: [id])
+  petBoardingId Int?
+}
+
+model PetBoardingStaff {
+  id         Int     @id @default(autoincrement())
+  boardingId Int     @map("boarding_id")
+  name       String
+  position   String
+  phone      String
+  email      String
+  isActive   Boolean @default(true) @map("is_active")
+
+  boarding PetBoarding @relation(fields: [boardingId], references: [id])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  ONLINE
 }

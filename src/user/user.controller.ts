@@ -1,39 +1,67 @@
+import { Controller, Get, Put, Param, Body } from "@nestjs/common";
+import { UserService } from "./user.service";
 import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Put,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
-import { UserService } from './user.service';
-import { Auth } from '../auth/decorators/auth.decorator';
-import { CurrentUser } from '../auth/decorators/user.decorator';
-import { UpdateProfileDto } from './dto/user.dto';
+  UpdateUserDto,
+  UserPreferencesDto,
+  ChangePasswordDto,
+} from "./dto/user.dto";
+import { Auth } from "src/auth/decorators/auth.decorator";
 
-@Controller('user')
+@Controller("user")
 export class UserController {
-  constructor(private usersService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
-  @Get()
-  getAllUsers() {
-    return this.usersService.getAllUsers();
+  @Get(":id")
+  @Auth()
+  async getUserProfile(@Param("id") id: string) {
+    return this.userService.getUserProfile(+id);
   }
 
-  @Get('profile')
+  @Put(":id")
   @Auth()
-  getUserProfile(@CurrentUser('id') id: number) {
-    return this.usersService.getUserProfile(id);
-  }
-  @UsePipes(new ValidationPipe())
-  @Put('profile')
-  @Auth()
-  updateProfile(
-    @CurrentUser('id') id: number,
-    @Body() updateProfileDto: UpdateProfileDto,
+  async updateUserProfile(
+    @Param("id") id: string,
+    @Body() userData: UpdateUserDto
   ) {
-    return this.usersService.updateProfile(id, updateProfileDto);
+    return this.userService.updateUserProfile(+id, userData);
+  }
+
+  @Get(":id/preferences")
+  @Auth()
+  async getUserPreferences(@Param("id") id: string) {
+    return this.userService.getUserPreferences(+id);
+  }
+
+  @Put(":id/preferences")
+  @Auth()
+  async updateUserPreferences(
+    @Param("id") id: string,
+    @Body() preferences: UserPreferencesDto
+  ) {
+    return this.userService.updateUserPreferences(+id, preferences);
+  }
+
+  @Put(":id/password")
+  @Auth()
+  async changePassword(
+    @Param("id") id: string,
+    @Body() passwordData: ChangePasswordDto
+  ) {
+    return this.userService.changePassword(+id, passwordData);
+  }
+
+  @Get(":id/favorites/clinics")
+  @Auth()
+  async getFavoriteClinics(@Param("id") id: string) {
+    return this.userService.getUserFavoriteClinics(+id);
+  }
+
+  @Put(":id/favorites/clinics/:clinicId")
+  @Auth()
+  async toggleFavoriteClinic(
+    @Param("id") id: string,
+    @Param("clinicId") clinicId: string
+  ) {
+    return this.userService.toggleFavoriteClinic(+id, +clinicId);
   }
 }
