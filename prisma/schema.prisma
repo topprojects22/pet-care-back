@@ -42,11 +42,26 @@ model User {
 }
 
 model Pet {
-  id                 Int                  @id @default(autoincrement())
-  name               String
-  userId             Int?                 @map("user_id")
-  createdAt          DateTime             @default(now()) @map("created_at")
-  updatedAt          DateTime             @updatedAt @map("updated_at")
+  id              Int        @id @default(autoincrement())
+  name            String
+  userId          Int?       @map("user_id")
+  birthDate       DateTime?  @map("birth_date")
+  gender          PetGender?
+  weight          Float?
+  color           String?
+  isSterilized    Boolean    @default(false) @map("is_sterilized")
+  deathDate       DateTime?  @map("death_date")
+  microchipDate   DateTime?  @map("microchip_date")
+  pedigreeNumber  String?    @map("pedigree_number")
+  insurancePolicy String?    @map("insurance_policy")
+  foodPreferences String?    @map("food_preferences")
+  behaviorNotes   String?    @map("behavior_notes")
+  trainingLevel   String?    @map("training_level")
+  favoriteToys    String?    @map("favorite_toys")
+  dailyRoutine    String?    @map("daily_routine")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
   user               User?                @relation(fields: [userId], references: [id])
   petPassport        PetPassport?
   petCard            PetCard?
@@ -69,34 +84,57 @@ enum PetGender {
 }
 
 model PetPassport {
-  id            Int          @id @default(autoincrement())
-  petId         Int          @unique
-  chip          Int
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
-  pet           Pet          @relation(fields: [petId], references: [id])
-  // TODO разобраться со связью
-  animalBreed   AnimalBreed? @relation(fields: [animalBreedId], references: [id])
-  animalBreedId Int?
+  id                  Int       @id @default(autoincrement())
+  petId               Int       @unique
+  chip                Int
+  chipInstallDate     DateTime? @map("chip_install_date")
+  breedId             Int?
+  tattooNumber        String?   @map("tattoo_number")
+  specialMarks        String?   @map("special_marks")
+  issuingOrganization String?   @map("issuing_organization")
+  registrationNumber  String?   @map("registration_number")
+  vaccinationHistory  Json?     @map("vaccination_history")
+  ownerSignature      String?   @map("owner_signature")
+  vetSignature        String?   @map("vet_signature")
+  qrCode              String?   @map("qr_code")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  pet   Pet          @relation(fields: [petId], references: [id])
+  breed AnimalBreed? @relation(fields: [breedId], references: [id])
 }
 
 model PetCard {
-  id         Int      @id @default(autoincrement())
-  petId      Int      @unique
-  status     String
-  health     String
-  vaccine    String
-  totalSpent Int
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-  pet        Pet      @relation(fields: [petId], references: [id])
+  id              Int       @id @default(autoincrement())
+  petId           Int       @unique
+  status          String
+  health          String
+  vaccine         String
+  totalSpent      Int       @map("total_spent")
+  lastVetVisit    DateTime? @map("last_vet_visit")
+  nextVetVisit    DateTime? @map("next_vet_visit")
+  allergies       String?
+  chronicDiseases String?   @map("chronic_diseases")
+  favoriteFood    String?   @map("favorite_food")
+  bloodType       String?   @map("blood_type")
+  dentalRecords   String?   @map("dental_records")
+  parasiteControl String?   @map("parasite_control")
+  spayNeuterInfo  String?   @map("spay_neuter_info")
+  microchipInfo   String?   @map("microchip_info")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  pet Pet @relation(fields: [petId], references: [id])
 }
 
 model AnimalType {
-  id          Int           @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
+  icon        String?
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
   animalBreed AnimalBreed[]
   pets        Pet[]
 }
@@ -122,10 +160,25 @@ enum BreedSize {
 }
 
 model Clinic {
-  id                 Int                  @id @default(autoincrement())
-  name               String
-  createdAt          DateTime             @default(now()) @map("created_at")
-  updatedAt          DateTime             @updatedAt @map("updated_at")
+  id               Int       @id @default(autoincrement())
+  name             String
+  address          String
+  phone            String
+  email            String?
+  website          String?
+  workingHours     String?   @map("working_hours")
+  geoCoordinates   String?   @map("geo_coordinates")
+  rating           Float?
+  photos           String[]
+  licenseNumber    String?   @map("license_number")
+  foundingDate     DateTime? @map("founding_date")
+  specialties      String[]
+  equipment        String[]
+  parkingAvailable Boolean   @default(false) @map("parking_available")
+  emergencyService Boolean   @default(false) @map("emergency_service")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
   admissionVetClinic AdmissionVetClinic[]
   service            Service[]
   preferredBy        User[]               @relation("UserPreferredClinics")
@@ -136,8 +189,8 @@ model Clinic {
 
 model AdmissionVetClinic {
   id            Int       @id @default(autoincrement())
-  petId         Int
-  clinicId      Int
+  petId         Int       @map("pet_id")
+  clinicId      Int       @map("clinic_id")
   procedure     String
   description   String
   diagnosis     String
@@ -163,16 +216,24 @@ model AdmissionVetClinic {
 }
 
 model Service {
-  id            Int       @id @default(autoincrement())
-  name          String
-  description   String
-  recomendation String
-  price         Int
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  clinicId      Int // TODO вернуть уникальность
-  clinic        Clinic    @relation(fields: [clinicId], references: [id])
-  payment       Payment[]
+  id                Int      @id @default(autoincrement())
+  name              String
+  description       String
+  recomendation     String
+  price             Int
+  duration          Int
+  category          String
+  isEmergency       Boolean  @default(false) @map("is_emergency")
+  preparation       String?
+  recoveryTime      String?  @map("recovery_time")
+  contraindications String?
+  successRate       Float?   @map("success_rate")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  clinicId          Int      @map("clinic_id")
+
+  clinic   Clinic    @relation(fields: [clinicId], references: [id])
+  payments Payment[]
 }
 
 model Role {
@@ -180,35 +241,44 @@ model Role {
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  user      User[]
+
+  user User[]
 }
 
 model Notification {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  description       String
-  createdAt         DateTime            @default(now()) @map("created_at")
-  updatedAt         DateTime            @updatedAt @map("updated_at")
-  expiriedAt        DateTime?
-  type              NotificationType
-  userId            Int
+  id               Int              @id @default(autoincrement())
+  name             String
+  description      String
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  expiriedAt       DateTime?        @map("expiried_at")
+  type             NotificationType
+  isCompleted      Boolean          @default(false) @map("is_completed")
+  location         String?
+  repeatPattern    String?          @map("repeat_pattern")
+  priority         Int?
+  attachmentUrl    String?          @map("attachment_url")
+  isConfirmed      Boolean          @default(false) @map("is_confirmed")
+  confirmationDate DateTime?        @map("confirmation_date")
+  userId           Int              @map("user_id")
+
   user              User                @relation(fields: [userId], references: [id])
   petOnNotification PetOnNotification[]
 }
 
 enum NotificationType {
-  hight
-  medium
-  low
+  HIGH
+  MEDIUM
+  LOW
 }
 
 model PetOnNotification {
   pet            Pet          @relation(fields: [petId], references: [id])
-  petId          Int
+  petId          Int          @map("pet_id")
   notification   Notification @relation(fields: [notificationId], references: [id])
-  notificationId Int
-  assignedAt     DateTime     @default(now())
-  assignedBy     String
+  notificationId Int          @map("notification_id")
+  assignedAt     DateTime     @default(now()) @map("assigned_at")
+  assignedBy     String       @map("assigned_by")
 
   @@id([petId, notificationId])
 }
