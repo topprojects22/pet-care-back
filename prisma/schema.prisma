@@ -69,12 +69,15 @@ enum PetGender {
 }
 
 model PetPassport {
-  id        Int      @id @default(autoincrement())
-  petId     Int      @unique
-  chip      Int
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  pet       Pet      @relation(fields: [petId], references: [id])
+  id            Int          @id @default(autoincrement())
+  petId         Int          @unique
+  chip          Int
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  pet           Pet          @relation(fields: [petId], references: [id])
+  // TODO разобраться со связью
+  animalBreed   AnimalBreed? @relation(fields: [animalBreedId], references: [id])
+  animalBreedId Int?
 }
 
 model PetCard {
@@ -132,7 +135,7 @@ model Clinic {
 }
 
 model AdmissionVetClinic {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   petId         Int
   clinicId      Int
   procedure     String
@@ -160,15 +163,16 @@ model AdmissionVetClinic {
 }
 
 model Service {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   name          String
   description   String
   recomendation String
   price         Int
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
   clinicId      Int // TODO вернуть уникальность
-  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  clinic        Clinic    @relation(fields: [clinicId], references: [id])
+  payment       Payment[]
 }
 
 model Role {
