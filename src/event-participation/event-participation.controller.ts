@@ -11,10 +11,10 @@ import {
     UseGuards,
     Req,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { EventParticipationService } from './event-participation.service';
 import { CreateEventParticipationDto } from './dto/create-event-participation.dto';
 import { UpdateEventParticipationDto } from './dto/update-event-participation.dto';
+import {Auth} from "../auth/decorators/auth.decorator";
 
 @Controller('events')
 export class EventParticipationController {
@@ -22,7 +22,7 @@ export class EventParticipationController {
 
     // Записаться на событие
     @Post(':postId/participate')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     participate(
         @Param('postId') postId: string,
         @Body() dto: CreateEventParticipationDto,
@@ -42,7 +42,7 @@ export class EventParticipationController {
 
     // Моё участие (если petId не указан — вернёт любое)
     @Get(':postId/my-participation')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     getMyParticipation(
         @Param('postId') postId: string,
         @Query('petId') petId?: string,
@@ -53,7 +53,7 @@ export class EventParticipationController {
 
     // Обновить участие (например, отменить)
     @Patch(':postId/my-participation')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     updateMyParticipation(
         @Param('postId') postId: string,
         @Body() dto: UpdateEventParticipationDto,
@@ -70,7 +70,7 @@ export class EventParticipationController {
 
     // Отменить участие
     @Delete(':postId/my-participation')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     removeMyParticipation(
         @Param('postId') postId: string,
         @Query('petId') petId?: string,
@@ -85,7 +85,7 @@ export class EventParticipationController {
 
     // Только для организатора: кто участвует в моём событии?
     @Get(':postId/participants/mine')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     getMyEventParticipants(@Param('postId') postId: string, @Req() req) {
         return this.participationService.getParticipantsForUserEvent(req.user.id, +postId);
     }

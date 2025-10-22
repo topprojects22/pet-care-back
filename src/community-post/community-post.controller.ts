@@ -11,7 +11,6 @@ import {
     Patch,
     Delete,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CommunityPostService } from './community-post.service';
 import { CreateCommunityPostDto } from './dto/create-community-post.dto';
 import { UpdateCommunityPostDto } from './dto/update-community-post.dto';
@@ -19,6 +18,7 @@ import { LikeService } from './like.service';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { PostType } from '@prisma/client';
+import {Auth} from "../auth/decorators/auth.decorator";
 
 @Controller('community-posts')
 export class CommunityPostController {
@@ -29,7 +29,7 @@ export class CommunityPostController {
     ) {}
 
     @Post()
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     create(@Body() dto: CreateCommunityPostDto, @Req() req) {
         return this.postService.createPost(req.user.id, dto);
     }
@@ -45,27 +45,27 @@ export class CommunityPostController {
     }
 
     @Patch(':id')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     update(@Param('id') id: string, @Body() dto: UpdateCommunityPostDto, @Req() req) {
         return this.postService.updatePost(req.user.id, +id, dto);
     }
 
     @Delete(':id')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     remove(@Param('id') id: string, @Req() req) {
         return this.postService.removePost(req.user.id, +id);
     }
 
     // Лайки
     @Post(':id/like')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     like(@Param('id') id: string, @Req() req) {
         return this.likeService.toggleLike(req.user.id, +id);
     }
 
     // Комментарии
     @Post(':id/comments')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     comment(@Param('id') id: string, @Body() dto: CreateCommentDto, @Req() req) {
         return this.commentService.createComment(req.user.id, +id, dto);
     }

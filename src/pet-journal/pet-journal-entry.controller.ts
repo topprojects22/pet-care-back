@@ -11,17 +11,17 @@ import {
     Req,
     Query,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PetJournalEntryService } from './pet-journal-entry.service';
 import { CreatePetJournalEntryDto } from './dto/create-pet-journal-entry.dto';
 import { UpdatePetJournalEntryDto } from './dto/update-pet-journal-entry.dto';
+import {Auth} from "../auth/decorators/auth.decorator";
 
 @Controller('pets/:petId/journal')
 export class PetJournalEntryController {
     constructor(private readonly journalService: PetJournalEntryService) {}
 
     @Post()
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     create(
         @Param('petId') petId: string,
         @Body() dto: CreatePetJournalEntryDto,
@@ -49,7 +49,7 @@ export class PetJournalEntryController {
     }
 
     @Patch(':id')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     update(
         @Param('petId') petId: string,
         @Param('id') id: string,
@@ -60,7 +60,7 @@ export class PetJournalEntryController {
     }
 
     @Delete(':id')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     remove(@Param('id') id: string, @Req() req) {
         return this.journalService.removeEntry(req.user.id, +id);
     }

@@ -1,39 +1,61 @@
-import { Controller, Post, Put, Delete, Param, Body, Get } from "@nestjs/common";
-import { MedicationService } from "./medication.service";
-import { CreateMedicationDto, UpdateMedicationDto } from "./dto/medication.dto";
-import { Auth } from "src/auth/decorators/auth.decorator";
+// src/medication/medication.controller.ts
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  UseGuards,
+  Req,
+  Query,
+} from '@nestjs/common';
+import { MedicationService } from './medication.service';
+import { CreateMedicationDto } from './dto/create-medication.dto';
+import { UpdateMedicationDto } from './dto/update-medication.dto';
+import {Auth} from "../auth/decorators/auth.decorator";
 
-@Controller("medication")
+@Controller('pets/:petId/medications')
 export class MedicationController {
-  constructor(private readonly medicationsService: MedicationService) {}
+  constructor(private readonly medicationService: MedicationService) {}
 
   @Post()
   @Auth()
-  async createMedication(@Body() medicationData: CreateMedicationDto) {
-    return this.medicationsService.addMedication(
-      medicationData.petId,
-      medicationData
-    );
-  }
-
-  @Put(":id")
-  @Auth()
-  async updateMedication(
-    @Param("id") id: string,
-    @Body() medicationData: UpdateMedicationDto
+  create(
+      @Param('petId') petId: string,
+      @Body() dto: CreateMedicationDto,
+      @Req() req,
   ) {
-    return this.medicationsService.updateMedication(+id, medicationData);
+    return this.medicationService.createMedication(req.user.id, +petId, dto);
   }
 
-  @Delete(":id")
-  @Auth()
-  async deleteMedication(@Param("id") id: string) {
-    return this.medicationsService.deleteMedication(+id);
+  @Get()
+  findAll(
+      @Param('petId') petId: string,
+      @Query('active') active?: string,
+  ) {
+    return this.medicationService.findAllForPet(+petId, active === 'true');
   }
 
-  @Get(":petId")
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.medicationService.findOne(+id);
+  }
+
+  @Patch(':id')
   @Auth()
-  async getPetMedications(@Param("petId") petId: string) {
-    return this.medicationsService.getPetMedications(+petId);
+  update(
+      @Param('id') id: string,
+      @Body() dto: UpdateMedicationDto,
+      @Req() req,
+  ) {
+    return this.medicationService.updateMedication(req.user.id, +id, dto);
+  }
+
+  @Delete(':id')
+  @Auth()
+  remove(@Param('id') id: string, @Req() req) {
+    return this.medicationService.removeMedication(req.user.id, +id);
   }
 }

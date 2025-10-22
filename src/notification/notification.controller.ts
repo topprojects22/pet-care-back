@@ -1,58 +1,62 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
+// src/notification/notification.controller.ts
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  UseGuards,
+  Req,
+  Query,
+} from '@nestjs/common';
 import { NotificationService } from './notification.service';
-import { CreateNotificationDto, UpdateNotificationDto } from './dto/notification.dto';
-import { Auth } from 'src/auth/decorators/auth.decorator';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import {Auth} from "../auth/decorators/auth.decorator";
 
-@Controller('notification')
+@Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationsService: NotificationService) {}
-
-  @Get('user/:userId')
-  @Auth()
-  async getUserNotifications(@Param('userId') userId: string) {
-    return this.notificationsService.getUserNotifications(+userId);
-  }
-
-  @Get('pet/:petId')
-  @Auth()
-  async getPetNotifications(@Param('petId') petId: string) {
-    return this.notificationsService.getPetNotifications(+petId);
-  }
-
-  @Get('calendar/:userId')
-  @Auth()
-  async getCalendarEvents(
-    @Param('userId') userId: string,
-    @Query('start') startDate: string,
-    @Query('end') endDate: string,
-  ) {
-    return this.notificationsService.getCalendarEvents(+userId, startDate, endDate);
-  }
+  constructor(private readonly notificationService: NotificationService) {}
 
   @Post()
   @Auth()
-  async createNotification(@Body() notificationData: CreateNotificationDto) {
-    return this.notificationsService.createNotification(notificationData);
+  create(@Body() dto: CreateNotificationDto, @Req() req) {
+    return this.notificationService.createNotification(req.user.id, dto);
   }
 
-  @Put(':id')
+  @Get()
   @Auth()
-  async updateNotification(
-    @Param('id') id: string,
-    @Body() notificationData: UpdateNotificationDto,
+  findAll(
+      @Req() req,
+      @Query('completed') completed?: string,
+      @Query('page') page?: string,
+      @Query('limit') limit?: string,
   ) {
-    return this.notificationsService.updateNotification(+id, notificationData);
+    return this.notificationService.findAllForUser(
+        req.user.id,
+        completed === 'true',
+        page ? +page : undefined,
+        limit ? +limit : undefined,
+    );
   }
 
-  @Delete(':id')
+  @Get(':id')
   @Auth()
-  async deleteNotification(@Param('id') id: string) {
-    return this.notificationsService.deleteNotification(+id);
+  findOne(@Param('id') id: string, @Req() req) {
+    const notification = this.notificationService.findOne(+id);
+    // Проверка прав — внутри сервиса
+    return notification;
   }
 
-  @Put(':id/complete')
+  @Patch(':id/complete')
   @Auth()
-  async markAsCompleted(@Param('id') id: string) {
-    return this.notificationsService.markAsCompleted(+id);
+  complete(@Param('id') id: string, @Req() req) {
+    return this.notificationService.markAsCompleted(req.user.id, +id);
+  }
+
+  @Patch(':id/confirm')
+  @Auth()
+  confirm(@Param('id') id: string, @Req() req) {
+    return this.notificationService.confirmNotification(req.user.id, +id);
   }
 }

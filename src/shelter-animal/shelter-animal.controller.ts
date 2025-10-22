@@ -10,17 +10,17 @@ import {
     Req,
     Query,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ShelterAnimalService } from './shelter-animal.service';
 import { CreateShelterAnimalDto } from './dto/create-shelter-animal.dto';
 import { UpdateShelterAnimalDto } from './dto/update-shelter-animal.dto';
+import {Auth} from "../auth/decorators/auth.decorator";
 
 @Controller('shelters/:shelterId/animals')
 export class ShelterAnimalController {
     constructor(private readonly animalService: ShelterAnimalService) {}
 
     @Post()
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     create(
         @Param('shelterId') shelterId: string,
         @Body() dto: CreateShelterAnimalDto,
@@ -68,7 +68,7 @@ export class ShelterAnimalController {
     }
 
     @Patch(':id')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     update(
         @Param('shelterId') shelterId: string,
         @Param('id') id: string,
@@ -79,7 +79,7 @@ export class ShelterAnimalController {
     }
 
     @Patch(':id/adopt')
-    @UseGuards(JwtAuthGuard)
+    @Auth()
     adopt(
         @Param('shelterId') shelterId: string,
         @Param('id') id: string,
