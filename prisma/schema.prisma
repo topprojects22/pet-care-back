@@ -39,6 +39,12 @@ model User {
   petBoarding        PetBoarding[]
   petBoardingBooking PetBoardingBooking[]
   petBoardingReview  PetBoardingReview[]
+  communityPost      CommunityPost[]
+  postLike           PostLike[]
+  postComment        PostComment[]
+  eventParticipation EventParticipation[]
+
+  shelter Shelter[]
 }
 
 model Pet {
@@ -75,6 +81,8 @@ model Pet {
   healthMetrics      HealthMetric[]
   groomingRecords    GroomingRecord[]
   petBoardingBooking PetBoardingBooking[]
+  petJournalEntry    PetJournalEntry[]
+  eventParticipation EventParticipation[]
 }
 
 enum PetGender {
@@ -135,8 +143,9 @@ model AnimalType {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  animalBreed AnimalBreed[]
-  pets        Pet[]
+  animalBreed   AnimalBreed[]
+  pets          Pet[]
+  shelterAnimal ShelterAnimal[]
 }
 
 model AnimalBreed {
@@ -149,8 +158,9 @@ model AnimalBreed {
   updatedAt      DateTime   @updatedAt @map("updated_at")
   animalTypeId   Int        @map("animal_type_id")
 
-  animalType  AnimalType?   @relation(fields: [animalTypeId], references: [id])
-  petPassport PetPassport[]
+  animalType    AnimalType?     @relation(fields: [animalTypeId], references: [id])
+  petPassport   PetPassport[]
+  shelterAnimal ShelterAnimal[]
 }
 
 enum BreedSize {
@@ -476,6 +486,137 @@ model PetBoardingStaff {
   isActive   Boolean @default(true) @map("is_active")
 
   boarding PetBoarding @relation(fields: [boardingId], references: [id])
+}
+
+model PetJournalEntry {
+  id        Int      @id @default(autoincrement())
+  petId     Int      @map("pet_id")
+  title     String
+  content   String
+  mediaUrls String[] @map("media_urls") // фото/видео
+  mood      String? // "игривый", "сонный" и т.п.
+  location  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  pet Pet @relation(fields: [petId], references: [id])
+}
+
+model CommunityPost {
+  id        Int       @id @default(autoincrement())
+  authorId  Int?      @map("author_id") // null = приют или система
+  shelterId Int?      @map("shelter_id") // если от приюта
+  title     String
+  content   String
+  mediaUrls String[]  @map("media_urls")
+  postType  PostType  @default(ANNOUNCEMENT) @map("post_type")
+  isPinned  Boolean   @default(false) @map("is_pinned")
+  location  String?
+  eventDate DateTime? @map("event_date") // если событие
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  author             User?                @relation(fields: [authorId], references: [id])
+  shelter            Shelter?             @relation(fields: [shelterId], references: [id])
+  likes              PostLike[]
+  comments           PostComment[]
+  eventParticipation EventParticipation[]
+}
+
+model Shelter {
+  id               Int      @id @default(autoincrement())
+  name             String
+  description      String?
+  address          String
+  phone            String
+  email            String?
+  website          String?
+  geoCoordinates   String?  @map("geo_coordinates")
+  photos           String[]
+  registrationDate DateTime @default(now()) @map("registration_date")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  ownerId Int             @map("owner_id")
+  owner   User            @relation(fields: [ownerId], references: [id])
+  posts   CommunityPost[]
+  animals ShelterAnimal[]
+}
+
+model ShelterAnimal {
+  id           Int       @id @default(autoincrement())
+  shelterId    Int       @map("shelter_id")
+  name         String
+  animalTypeId Int       @map("animal_type_id")
+  breedId      Int?
+  gender       PetGender
+  ageEstimate  Int? // в месяцах
+  description  String
+  isAdopted    Boolean   @default(false) @map("is_adopted")
+  adoptionDate DateTime? @map("adoption_date")
+  photos       String[]
+  specialNeeds String? // "нужен дом без детей"
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  shelter    Shelter      @relation(fields: [shelterId], references: [id])
+  animalType AnimalType   @relation(fields: [animalTypeId], references: [id])
+  breed      AnimalBreed? @relation(fields: [breedId], references: [id])
+}
+
+model PostLike {
+  id      Int      @id @default(autoincrement())
+  postId  Int      @map("post_id")
+  userId  Int      @map("user_id")
+  likedAt DateTime @default(now()) @map("liked_at")
+
+  post CommunityPost @relation(fields: [postId], references: [id])
+  user User          @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+}
+
+model PostComment {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  userId    Int      @map("user_id")
+  content   String
+  parentId  Int?     @map("parent_id") // для ответов
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post    CommunityPost @relation(fields: [postId], references: [id])
+  user    User          @relation(fields: [userId], references: [id])
+  parent  PostComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies PostComment[] @relation("CommentReplies")
+}
+
+model EventParticipation {
+  id       Int                 @id @default(autoincrement())
+  postId   Int                 @map("post_id") // ссылка на CommunityPost с типом EVENT
+  userId   Int                 @map("user_id")
+  petId    Int?                @map("pet_id") // какой питомец участвует
+  status   ParticipationStatus @default(CONFIRMED)
+  joinedAt DateTime            @default(now()) @map("joined_at")
+
+  post CommunityPost @relation(fields: [postId], references: [id])
+  user User          @relation(fields: [userId], references: [id])
+  pet  Pet?          @relation(fields: [petId], references: [id])
+
+  @@unique([postId, userId, petId])
+}
+
+enum ParticipationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum PostType {
+  ANNOUNCEMENT // объявление приюта
+  EVENT // событие: прогулка, конкурс
+  BLOG // личный пост владельца
+  ADOPTION // "заберите котика"
 }
 
 enum BookingStatus {
