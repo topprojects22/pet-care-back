@@ -5,7 +5,7 @@ import {
     ForbiddenException,
     BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreateShelterAnimalDto } from './dto/create-shelter-animal.dto';
 import { UpdateShelterAnimalDto } from './dto/update-shelter-animal.dto';
 
@@ -107,7 +107,7 @@ export class ShelterAnimalService {
 
         return this.prisma.shelterAnimal.update({
             where: { id: animalId },
-            dto,
+            data: dto,
         });
     }
 

@@ -5,7 +5,7 @@ import {
     BadRequestException,
     ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreateEventParticipationDto } from './dto/create-event-participation.dto';
 import { UpdateEventParticipationDto } from './dto/update-event-participation.dto';
 import { ParticipationStatus } from '@prisma/client';
@@ -99,7 +99,7 @@ export class EventParticipationService {
 
         return this.prisma.eventParticipation.update({
             where: { id: participation.id },
-            dto,
+            data: dto,
         });
     }
 

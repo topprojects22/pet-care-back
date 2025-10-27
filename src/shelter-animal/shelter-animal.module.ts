@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { ShelterAnimalController } from './shelter-animal.controller';
 import { ShelterAnimalService } from './shelter-animal.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 
 @Module({
     controllers: [ShelterAnimalController],

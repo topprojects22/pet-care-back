@@ -1,6 +1,6 @@
 // src/shelter/shelter.service.ts
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreateShelterDto } from './dto/create-shelter.dto';
 import { UpdateShelterDto } from './dto/update-shelter.dto';
 

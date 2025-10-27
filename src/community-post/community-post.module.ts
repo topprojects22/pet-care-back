@@ -4,7 +4,7 @@ import { CommunityPostController } from './community-post.controller';
 import { CommunityPostService } from './community-post.service';
 import { CommentService } from './comment.service';
 import { LikeService } from './like.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { ShelterModule } from 'src/shelter/shelter.module'; // для валидации shelterId
 
 @Module({

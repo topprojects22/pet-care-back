@@ -9,6 +9,7 @@ import {
     Delete,
     UseGuards,
     Req,
+    Query,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ServiceService } from './service.service';

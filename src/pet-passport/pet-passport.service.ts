@@ -5,8 +5,8 @@ import {
     ForbiddenException,
     BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreatePetPassportDto } from '../dto/create-pet-passport.dto';
+import { PrismaService } from '../prisma.service';
+import { CreatePetPassportDto } from './dto/create-pet-passport.dto';
 import { PassportPdfGeneratorService } from './passport-pdf-generator.service';
 import {UpdatePetPassportDto} from "./dto/update-pet-passport.dto";
 
@@ -40,7 +40,7 @@ export class PetPassportService {
         const qrCode = `https://petcare.app/pet/${petId}/passport?chip=${dto.chip}`;
 
         const passport = await this.prisma.petPassport.create({
-        dara: {
+        data: {
         ...dto,
             petId,
             qrCode,
@@ -85,7 +85,7 @@ export class PetPassportService {
 
         return this.prisma.petPassport.update({
             where: { petId },
-            dto,
+            data: dto,
         });
     }
 

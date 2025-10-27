@@ -45,8 +45,8 @@ export class EventParticipationController {
     @Auth()
     getMyParticipation(
         @Param('postId') postId: string,
-        @Query('petId') petId?: string,
         @Req() req,
+        @Query('petId') petId?: string,
     ) {
         return this.participationService.findOne(+postId, req.user.id, petId ? +petId : undefined);
     }
@@ -57,8 +57,8 @@ export class EventParticipationController {
     updateMyParticipation(
         @Param('postId') postId: string,
         @Body() dto: UpdateEventParticipationDto,
-        @Query('petId') petId?: string,
         @Req() req,
+        @Query('petId') petId?: string,
     ) {
         return this.participationService.updateParticipation(
             req.user.id,
@@ -73,8 +73,8 @@ export class EventParticipationController {
     @Auth()
     removeMyParticipation(
         @Param('postId') postId: string,
-        @Query('petId') petId?: string,
         @Req() req,
+        @Query('petId') petId?: string,
     ) {
         return this.participationService.removeParticipation(
             req.user.id,

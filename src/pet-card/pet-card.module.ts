@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { PetCardController } from './pet-card.controller';
 import { PetCardService } from './pet-card.service';
 import { PetCardUpdaterService } from './pet-card-updater.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 
 @Module({
     controllers: [PetCardController],

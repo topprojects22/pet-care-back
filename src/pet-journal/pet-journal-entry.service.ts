@@ -4,7 +4,7 @@ import {
     NotFoundException,
     ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreatePetJournalEntryDto } from './dto/create-pet-journal-entry.dto';
 import { UpdatePetJournalEntryDto } from './dto/update-pet-journal-entry.dto';
 
@@ -74,7 +74,7 @@ export class PetJournalEntryService {
 
         return this.prisma.petJournalEntry.update({
             where: { id: entryId },
-            dto,
+            data: dto,
         });
     }
 

@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { EventParticipationController } from './event-participation.controller';
 import { EventParticipationService } from './event-participation.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 
 @Module({
     controllers: [EventParticipationController],

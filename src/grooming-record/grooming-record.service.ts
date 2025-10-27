@@ -54,7 +54,7 @@ export class GroomingRecordService {
 
         return this.prisma.groomingRecord.update({
             where: { id },
-            dto,
+            data: dto,
         });
     }
 

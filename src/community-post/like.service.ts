@@ -1,3 +1,6 @@
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "src/prisma.service";
+
 // src/community-post/like.service.ts
 @Injectable()
 export class LikeService {

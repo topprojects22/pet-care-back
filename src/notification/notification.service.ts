@@ -85,7 +85,7 @@ export class NotificationService {
 
     return this.prisma.notification.update({
       where: { id },
-      dto,
+      data: dto,
     });
   }
 

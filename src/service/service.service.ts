@@ -61,7 +61,7 @@ export class ServiceService {
 
         return this.prisma.service.update({
             where: { id },
-            dto,
+            data: dto,
         });
     }
 

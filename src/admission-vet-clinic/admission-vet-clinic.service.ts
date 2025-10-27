@@ -7,8 +7,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateAdmissionVetClinicDto } from './dto/create-admission-vet-clinic.dto';
-import { PetCardUpdaterService } from '../pet-card-updater.service';
+import { PetCardUpdaterService } from '../pet-card/pet-card-updater.service';
 import { NotificationSchedulerService } from '../notification/notification.scheduler.service';
+import { UpdateAdmissionVetClinicDto } from './dto/update-admission-vet-clinic.dto';
 
 @Injectable()
 export class AdmissionVetClinicService {
@@ -85,7 +86,7 @@ export class AdmissionVetClinicService {
 
         return this.prisma.admissionVetClinic.update({
             where: { id },
-            dto,
+            data: dto,
         });
     }
 

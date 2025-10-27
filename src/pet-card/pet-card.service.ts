@@ -5,8 +5,8 @@ import {
     ForbiddenException,
     BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreatePetCardDto } from '../dto/create-pet-card.dto';
+import { PrismaService } from '../prisma.service';
+import { CreatePetCardDto } from './dto/create-pet-card.dto';
 import {UpdatePetCardDto} from "./dto/update-pet-card.dto";
 
 @Injectable()
@@ -42,7 +42,7 @@ export class PetCardService {
 
         return this.prisma.petCard.update({
             where: { petId },
-            dto,
+            data: dto,
         });
     }
 }

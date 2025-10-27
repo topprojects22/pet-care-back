@@ -1,5 +1,5 @@
 // src/admission-vet-clinic/dto/create-admission-vet-clinic.dto.ts
-import { IsString, IsNumber, IsOptional, IsDate, IsFloat, IsInt, IsArray } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsDate, IsDecimal, IsInt, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateAdmissionVetClinicDto {
@@ -36,7 +36,7 @@ export class CreateAdmissionVetClinicDto {
     @IsOptional()
     medications?: string; // можно как JSON или строку
 
-    @IsFloat()
+    @IsDecimal()
     cost: number;
 
     @IsArray()
@@ -45,7 +45,7 @@ export class CreateAdmissionVetClinicDto {
     files?: string[]; // URLs
 
     // Физиологические показатели
-    @IsFloat()
+    @IsDecimal()
     @IsOptional()
     temperature?: number;
 
@@ -57,7 +57,7 @@ export class CreateAdmissionVetClinicDto {
     @IsOptional()
     respiration?: number;
 
-    @IsFloat()
+    @IsDecimal()
     @IsOptional()
     weight?: number;
 

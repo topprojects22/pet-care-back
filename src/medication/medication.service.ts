@@ -62,7 +62,7 @@ export class MedicationService {
 
     return this.prisma.medication.update({
       where: { id },
-      dto,
+      data: dto,
     });
   }
 

@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { PetJournalEntryController } from './pet-journal-entry.controller';
 import { PetJournalEntryService } from './pet-journal-entry.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 
 @Module({
     controllers: [PetJournalEntryController],

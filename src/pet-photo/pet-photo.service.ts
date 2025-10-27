@@ -78,7 +78,7 @@ export class PetPhotoService {
 
         return this.prisma.petPhoto.update({
             where: { id },
-            dto,
+            data: dto,
         });
     }
 

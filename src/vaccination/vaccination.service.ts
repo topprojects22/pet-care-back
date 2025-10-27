@@ -68,7 +68,7 @@ export class VaccinationService {
 
     return this.prisma.vaccination.update({
       where: { id },
-      dto,
+      data: dto,
     });
   }
 

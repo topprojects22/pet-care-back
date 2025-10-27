@@ -5,7 +5,7 @@ import {
     ForbiddenException,
     BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreateCommunityPostDto } from './dto/create-community-post.dto';
 import { UpdateCommunityPostDto } from './dto/update-community-post.dto';
 import { PostType } from '@prisma/client';
