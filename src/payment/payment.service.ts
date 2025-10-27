@@ -81,7 +81,7 @@ export class PaymentService {
     async updatePaymentStatus(id: number, dto: UpdatePaymentStatusDto) {
         return this.prisma.payment.update({
             where: { id },
-            dto,
+            data: dto,
         });
     }
 }

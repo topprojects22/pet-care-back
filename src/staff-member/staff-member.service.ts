@@ -54,7 +54,7 @@ export class StaffMemberService {
 
         return this.prisma.staffMember.update({
             where: { id },
-            dto,
+            data: dto,
         });
     }
 

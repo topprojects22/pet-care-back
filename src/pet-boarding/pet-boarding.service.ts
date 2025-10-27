@@ -14,7 +14,11 @@ export class PetBoardingService {
 
     async createListing(userId: number, dto: CreatePetBoardingDto) {
         return this.prisma.petBoarding.create({
-        data: { ...dto, userId, isActive: true },
+        data: {
+            ...dto,
+            email: dto.email.toLowerCase(),
+            user: { connect: { id: userId } }
+        }, // Используем связь через connect, isActive: true },
         include: { user: { select: { id: true, name: true } } },
     });
     }
@@ -52,7 +56,7 @@ export class PetBoardingService {
     async updateListing(userId: number, id: number, dto: any) {
         const listing = await this.findOne(id);
         if (listing.userId !== userId) throw new ForbiddenException('Not your listing');
-        return this.prisma.petBoarding.update({ where: { id },  dto });
+        return this.prisma.petBoarding.update({ where: { id },  data:dto });
     }
 
     async removeListing(userId: number, id: number) {

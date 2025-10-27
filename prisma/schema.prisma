@@ -49,6 +49,7 @@ model User {
 
 model Pet {
   id              Int        @id @default(autoincrement())
+  avatarPath String? @map("avatar_path") // для аватара питомца
   name            String
   userId          Int?       @map("user_id")
   birthDate       DateTime?  @map("birth_date")

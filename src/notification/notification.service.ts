@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationType } from '@prisma/client';
+import { UpdateNotificationDto } from './dto/update-notification.dto';
 
 @Injectable()
 export class NotificationService {
@@ -56,7 +57,7 @@ export class NotificationService {
     return this.prisma.notification.findMany({
       where,
       include: {
-        pets: { include: { pet: { select: { id: true, name: true } } } },
+        petOnNotification: { include: { pet: { select: { id: true, name: true } } } },
       },
       orderBy: { createdAt: 'desc' },
       skip,
@@ -68,7 +69,7 @@ export class NotificationService {
     const notification = await this.prisma.notification.findUnique({
       where: { id },
       include: {
-        pets: { include: { pet: { select: { id: true, name: true } } } },
+        petOnNotification: { include: { pet: { select: { id: true, name: true } } } },
       },
     });
 
@@ -76,7 +77,7 @@ export class NotificationService {
     return notification;
   }
 
-  async updateNotification(userId: number, id: number, dto: Partial<CreateNotificationDto>) {
+  async updateNotification(userId: number, id: number, dto: UpdateNotificationDto) {
     const notification = await this.findOne(id);
 
     if (notification.userId !== userId) {

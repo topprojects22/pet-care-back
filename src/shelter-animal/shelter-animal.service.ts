@@ -38,7 +38,14 @@ export class ShelterAnimalService {
 
         return this.prisma.shelterAnimal.create({
         data: {
-            ...dto,
+            name: dto.name,
+            description: dto.description,
+            ageEstimate: dto.ageEstimate,
+            gender: dto.gender,
+            animalType: { connect: { id: dto.animalTypeId } },
+            photos: dto.photos,
+            specialNeeds: dto.specialNeeds,
+            breed: { connect: { id: dto.breedId } },
             shelter: { connect: { id: shelterId } },
             isAdopted: dto.isAdopted ?? false,
         },

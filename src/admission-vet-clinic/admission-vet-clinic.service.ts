@@ -30,9 +30,25 @@ export class AdmissionVetClinicService {
 
         const admission = await this.prisma.admissionVetClinic.create({
         data: {
-        ...dto,
-            petId,
-            clinicId: dto.clinicId,
+            procedure: dto.procedure,
+            description: dto.description,
+            diagnosis: dto.diagnosis,
+            recomendation: dto.recomendation,
+            visitDate: dto.visitDate,
+            nextVisitDate: dto.nextVisitDate,
+            doctorName: dto.doctorName,
+            medications: dto.medications,
+            cost: dto.cost,
+            files: dto.files,
+            temperature: dto.temperature,
+            pulse: dto.pulse,
+            respiration: dto.respiration,
+            weight: dto.weight,
+            anesthesia: dto.anesthesia,
+            complications: dto.complications,
+            status: dto.status,
+            pet: { connect: { id: petId } },
+            clinic: { connect: { id: dto.clinicId } }
         },
         include: {
             pet: { select: { id: true, name: true } },

@@ -5,7 +5,7 @@ import {
     ForbiddenException,
     BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 
@@ -82,7 +82,7 @@ export class BookingService {
     }
 
     async cancelBooking(userId: number, bookingId: number) {
-        const booking = await this.prisma.petBoardingBooking.findUnique({ where: { id: bookingId } });
+        const booking = await this.prisma.petBoardingBooking.findUnique({ where: { id: bookingId }, include: { boarding: true }  });
         if (!booking || (booking.userId !== userId && booking.boarding.userId !== userId)) {
             throw new ForbiddenException('Not authorized');
         }
