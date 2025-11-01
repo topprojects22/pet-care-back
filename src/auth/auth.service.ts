@@ -80,6 +80,7 @@ export class AuthService {
         avatarPath: faker.image.avatar(),
         phone: faker.phone.number("+7 (###) ###-##-##"),
         password: await hash(registerAuthDto.password),
+        roleId: userRole.id,
       },
     });
 
