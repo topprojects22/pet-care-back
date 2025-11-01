@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -62,6 +63,14 @@ export class AuthService {
     });
     if (existUser) {
       throw new BadRequestException("User already exist");
+    }
+
+    const userRole = await this.prisma.role.findUnique({
+      where: { name: "user" },
+    });
+
+    if (!userRole) {
+      throw new InternalServerErrorException('Default role "user" not found');
     }
 
     const user = await this.prisma.user.create({
