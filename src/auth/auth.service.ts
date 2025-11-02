@@ -47,6 +47,7 @@ export class AuthService {
 
   async login(loginAuthDto: LoginAuthDto) {
     const user = await this.validateUser(loginAuthDto);
+    console.log(user, "111111");
     const tokens = await this.issueToken(user.id, user.role.name);
 
     const userFields = this.returnUserFields(user);
