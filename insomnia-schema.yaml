@@ -1,0 +1,645 @@
+openapi: 3.0.3
+info:
+  title: Pet Care API
+  description: REST API для управления питомцами, ветеринарными услугами, приютами и сообществом.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@petcare.example.com
+
+servers:
+  - url: http://localhost:3000
+    description: Локальный сервер разработки
+
+securitySchemes:
+  BearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Вход в систему
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginDto"
+      responses:
+        "200":
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Неверные учетные данные
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDto"
+      responses:
+        "201":
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Ошибки валидации
+
+  /user/{id}:
+    get:
+      tags:
+        - User
+      summary: Получить профиль пользователя
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "403":
+          description: Доступ запрещён
+
+    put:
+      tags:
+        - User
+      summary: Обновить профиль пользователя
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserDto"
+      responses:
+        "200":
+          description: Обновлено
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /user/{id}/password:
+    put:
+      tags:
+        - User
+      summary: Сменить пароль
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordDto"
+      responses:
+        "200":
+          description: Пароль изменён
+
+  /pet:
+    post:
+      tags:
+        - Pet
+      summary: Создать питомца
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePetDto"
+      responses:
+        "201":
+          description: Питомец создан
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+
+  /pet/{id}:
+    get:
+      tags:
+        - Pet
+      summary: Получить питомца по ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+
+  /pets/{petId}/vet-visits:
+    post:
+      tags:
+        - Medical
+      summary: Записать визит в клинику
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdmissionVetClinicDto"
+      responses:
+        "201":
+          description: Визит создан
+
+    get:
+      tags:
+        - Medical
+      summary: История визитов питомца
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Список визитов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdmissionVetClinic"
+
+  /pets/{petId}/vaccinations:
+    post:
+      tags:
+        - Medical
+      summary: Добавить вакцинацию
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVaccinationDto"
+      responses:
+        "201":
+          description: Вакцинация добавлена
+
+  /medical/clinics:
+    get:
+      tags:
+        - Medical
+      summary: Список ветклиник
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Список клиник
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Clinic"
+
+  /community-posts:
+    post:
+      tags:
+        - Community
+      summary: Создать пост
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommunityPostDto"
+      responses:
+        "201":
+          description: Пост создан
+
+    get:
+      tags:
+        - Community
+      summary: Список постов
+      parameters:
+        - name: type
+          in: query
+          schema:
+            $ref: "#/components/schemas/PostType"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Список постов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CommunityPost"
+
+  /notifications:
+    post:
+      tags:
+        - Notifications
+      summary: Создать уведомление
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNotificationDto"
+      responses:
+        "201":
+          description: Уведомление создано
+
+    get:
+      tags:
+        - Notifications
+      summary: Список уведомлений пользователя
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: completed
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Список уведомлений
+
+  /shelters:
+    post:
+      tags:
+        - Shelter
+      summary: Создать приют
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShelterDto"
+      responses:
+        "201":
+          description: Приют создан
+
+  /pets/{petId}/photos/upload:
+    post:
+      tags:
+        - Pet
+      summary: Загрузить фото питомца
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photo:
+                  type: string
+                  format: binary
+              required: [photo]
+      responses:
+        "201":
+          description: Фото успешно загружено
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PetPhoto"
+        "400":
+          description: Ошибка загрузки (неверный тип файла, отсутствует файл и т.д.)
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginDto:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+
+    RegisterDto:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        name:
+          type: string
+        lastName:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    UpdateUserDto:
+      type: object
+      properties:
+        name:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+
+    ChangePasswordDto:
+      type: object
+      required: [oldPassword, newPassword]
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 6
+
+    CreatePetDto:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          $ref: "#/components/schemas/PetGender"
+        weight:
+          type: number
+
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        userId:
+          type: integer
+        birthDate:
+          type: string
+          format: date-time
+
+    CreateAdmissionVetClinicDto:
+      type: object
+      required: [clinicId, procedure, visitDate, cost]
+      properties:
+        clinicId:
+          type: integer
+        procedure:
+          type: string
+        visitDate:
+          type: string
+          format: date-time
+        cost:
+          type: number
+
+    AdmissionVetClinic:
+      type: object
+      properties:
+        id:
+          type: integer
+        petId:
+          type: integer
+        clinicId:
+          type: integer
+        visitDate:
+          type: string
+          format: date-time
+        cost:
+          type: number
+
+    CreateVaccinationDto:
+      type: object
+      required: [name, date]
+      properties:
+        name:
+          type: string
+        date:
+          type: string
+          format: date-time
+        nextDate:
+          type: string
+          format: date-time
+
+    Clinic:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+
+    CreateCommunityPostDto:
+      type: object
+      required: [title, content, postType]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        postType:
+          $ref: "#/components/schemas/PostType"
+        mediaUrls:
+          type: array
+          items:
+            type: string
+
+    CommunityPost:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        postType:
+          $ref: "#/components/schemas/PostType"
+        authorId:
+          type: integer
+
+    CreateNotificationDto:
+      type: object
+      required: [name, description, type]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: "#/components/schemas/NotificationType"
+        expiriedAt:
+          type: string
+          format: date-time
+
+    CreateShelterDto:
+      type: object
+      required: [name, address, phone]
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+
+    PetGender:
+      type: string
+      enum: [MALE, FEMALE, OTHER]
+
+    PostType:
+      type: string
+      enum: [ANNOUNCEMENT, EVENT, BLOG, ADOPTION]
+
+    NotificationType:
+      type: string
+      enum: [HIGH, MEDIUM, LOW]
+
+    PetPhoto:
+      type: object
+      properties:
+        id:
+          type: integer
+        petId:
+          type: integer
+        url:
+          type: string
+        isPrimary:
+          type: boolean
+
+    CreatePetPhotoDto:
+      type: object
+      properties:
+        isPrimary:
+          type: boolean
+          default: false
