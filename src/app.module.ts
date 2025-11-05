@@ -31,11 +31,6 @@ import { AdmissionVetClinicModule } from "./admission-vet-clinic/admission-vet-c
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    ServeStaticModule.forRoot({
-      serveRoot: "../public",
-      rootPath: join(__dirname, "../public"),
-      exclude: ["/api*"],
-    }),
     UserModule,
     AuthModule,
     PaginationModule,

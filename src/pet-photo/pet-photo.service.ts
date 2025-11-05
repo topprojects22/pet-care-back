@@ -19,7 +19,7 @@ export class PetPhotoService {
     url: string,
     dto?: Pick<CreatePetPhotoDto, "isPrimary">
   ) {
-    const pet = await this.prisma.pet.findUnique({
+    const pet = await this.prisma.pet.findFirst({
       where: { id: petId, userId },
     });
     if (!pet) throw new ForbiddenException("Pet not found or not yours");
@@ -51,7 +51,7 @@ export class PetPhotoService {
       });
     }
 
-    return photo;
+    return {isSuccess: true};
   }
 
   async findAllForPet(petId: number) {
