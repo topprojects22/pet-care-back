@@ -1,73 +1,199 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Pet Care Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend приложение для управления уходом за домашними животными, построенное на NestJS.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Возможности
 
-## Description
+- **Аутентификация и авторизация** - JWT-based аутентификация с refresh tokens
+- **Управление питомцами** - Полный CRUD для питомцев, паспортов, карточек здоровья
+- **Медицинские записи** - Вакцинации, медикаменты, визиты в клиники
+- **Услуги** - Груминг, передержка, медицинские услуги
+- **Сообщество** - Посты, комментарии, лайки, события
+- **Приюты** - Управление приютами и животными
+- **Платежи** - Интеграция со Stripe для обработки платежей
+- **Уведомления** - Система уведомлений для важных событий
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📋 Требования
 
-## Installation
+- Node.js >= 18.x
+- PostgreSQL >= 14.x
+- npm или yarn
+
+## 🛠️ Установка
 
 ```bash
-$ npm install
+# Клонирование репозитория
+git clone <repository-url>
+cd pet-care-back
+
+# Установка зависимостей
+npm install
+
+# Настройка переменных окружения
+cp .env.example .env
+# Отредактируйте .env файл с вашими настройками
+
+# Настройка базы данных
+npx prisma generate
+npx prisma migrate dev
+
+# Запуск приложения
+npm run start:dev
 ```
 
-## Running the app
+## 🔧 Переменные окружения
+
+Создайте файл `.env` в корне проекта:
+
+```env
+# App
+NODE_ENV=development
+PORT=5000
+API_PREFIX=api
+
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/petcare
+
+# JWT
+JWT_SECRET=your-super-secret-jwt-key-min-32-chars
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+# CORS
+CORS_ORIGIN=http://localhost:3000
+
+# Rate Limiting
+RATE_LIMIT_TTL=60
+RATE_LIMIT_MAX=100
+```
+
+## 📚 API Документация
+
+После запуска приложения, Swagger документация доступна по адресу:
+- Development: `http://localhost:5000/api/docs`
+
+## 🏗️ Архитектура
+
+Проект следует принципам модульной архитектуры NestJS:
+
+```
+src/
+├── common/              # Общие компоненты
+│   ├── decorators/      # Декораторы
+│   ├── dto/             # Базовые DTO
+│   ├── filters/         # Exception filters
+│   ├── guards/          # Guards для авторизации
+│   ├── interceptors/    # Interceptors
+│   ├── services/        # Базовые сервисы
+│   └── utils/           # Утилиты
+├── config/              # Конфигурация
+├── auth/                # Аутентификация
+├── user/                # Пользователи
+├── pet/                 # Питомцы
+├── health/              # Health checks
+└── ...                  # Другие модули
+```
+
+## 🔒 Безопасность
+
+- ✅ Helmet для защиты заголовков
+- ✅ CORS настройка
+- ✅ Rate Limiting
+- ✅ Глобальная валидация входных данных
+- ✅ JWT аутентификация
+- ✅ Guards для проверки прав доступа
+- ✅ Валидация переменных окружения
+
+## 🧪 Тестирование
 
 ```bash
-# development
-$ npm run start
+# Unit тесты
+npm run test
 
-# watch mode
-$ npm run start:dev
+# E2E тесты
+npm run test:e2e
 
-# production mode
-$ npm run start:prod
+# Покрытие кода
+npm run test:cov
 ```
 
-## Test
+## 📦 Скрипты
 
 ```bash
-# unit tests
-$ npm run test
+# Разработка
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
+# Production
+npm run build
+npm run start:prod
 
-# test coverage
-$ npm run test:cov
+# Линтинг
+npm run lint
+
+# Форматирование
+npm run format
+
+# Миграции Prisma
+npx prisma migrate dev
+npx prisma generate
+npx prisma studio
 ```
 
-## Support
+## 🏥 Health Checks
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- `/api/health` - Полная проверка состояния
+- `/api/health/liveness` - Liveness probe для Kubernetes
+- `/api/health/readiness` - Readiness probe для Kubernetes
 
-## Stay in touch
+## 📝 Миграции базы данных
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Создание новой миграции
+npx prisma migrate dev --name migration_name
 
-## License
+# Применение миграций в production
+npx prisma migrate deploy
 
-Nest is [MIT licensed](LICENSE).
+# Просмотр базы данных
+npx prisma studio
+```
+
+## 🔍 Логирование
+
+Приложение использует встроенный Logger NestJS для структурированного логирования:
+- Ошибки логируются с полным контекстом
+- В development режиме показываются stack traces
+- В production режиме детали ошибок скрыты
+
+## 🚨 Обработка ошибок
+
+Все ошибки обрабатываются глобальным `HttpExceptionFilter`:
+- Единообразный формат ответов
+- Структурированное логирование
+- Безопасность в production (скрытие деталей)
+
+## 📈 Производительность
+
+- Пагинация для всех списков
+- Индексы в базе данных (см. PRISMA_INDEXES.md)
+- Rate Limiting для защиты от злоупотреблений
+- Connection pooling для Prisma
+
+## 🤝 Вклад в проект
+
+1. Создайте ветку для вашей функции (`git checkout -b feature/AmazingFeature`)
+2. Закоммитьте изменения (`git commit -m 'Add some AmazingFeature'`)
+3. Запушьте в ветку (`git push origin feature/AmazingFeature`)
+4. Откройте Pull Request
+
+## 📄 Лицензия
+
+Этот проект является приватным и не имеет публичной лицензии.
+
+## 📞 Контакты
+
+Для вопросов и предложений создайте issue в репозитории.
+
+---
+
+**Примечание**: Для получения подробной информации об улучшениях проекта см. [IMPROVEMENTS.md](./IMPROVEMENTS.md)

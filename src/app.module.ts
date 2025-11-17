@@ -3,9 +3,10 @@ import { UserModule } from "./user/user.module";
 import { AuthModule } from "./auth/auth.module";
 import { PrismaService } from "./prisma.service";
 import { ConfigModule } from "@nestjs/config";
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { McpModule } from '@nestjs-mcp/server';
 import { PaginationModule } from "./pagination/pagination.module";
-import { ServeStaticModule } from "@nestjs/serve-static";
-import { join } from "path";
 import { PetModule } from "./pet/pet.module";
 import { NotificationModule } from "./notification/notification.module";
 import { GroomingModule } from "./grooming/grooming.module";
@@ -27,10 +28,35 @@ import { GroomingRecordModule } from "./grooming-record/grooming-record.module";
 import { EventParticipationModule } from "./event-participation/event-participation.module";
 import { CommunityPostModule } from "./community-post/community-post.module";
 import { AdmissionVetClinicModule } from "./admission-vet-clinic/admission-vet-clinic.module";
+import { HealthModule } from "./health/health.module";
+import appConfig from "./config/app.config";
+import { validationSchema } from "./config/validation.schema";
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    // Конфигурация с валидацией
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig],
+      validationSchema,
+      validationOptions: {
+        allowUnknown: true,
+        abortEarly: false,
+      },
+    }),
+    // Rate Limiting
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 минута
+        limit: 100, // 100 запросов
+      },
+    ]),
+    // MCP Module
+    McpModule.forRoot({
+      name: 'Pet Care Backend',
+      version: '1.0.0',
+    }),
+    // Feature Modules
     UserModule,
     AuthModule,
     PaginationModule,
@@ -51,13 +77,20 @@ import { AdmissionVetClinicModule } from "./admission-vet-clinic/admission-vet-c
     PetJournalEntryModule,
     PetBoardingReviewModule,
     PaymentModule,
-    MedicalServicesModule,
     GroomingRecordModule,
     EventParticipationModule,
     CommunityPostModule,
     AdmissionVetClinicModule,
+    HealthModule,
   ],
   controllers: [],
-  providers: [PrismaService],
+  providers: [
+    PrismaService,
+    // Глобальный Rate Limiting Guard
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
