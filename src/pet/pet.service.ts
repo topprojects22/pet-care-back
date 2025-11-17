@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Req } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreatePetDto, UpdatePetDto, CreatePetPassportDto } from './dto/pet.dto';
 
@@ -62,10 +62,11 @@ export class PetService {
   }
 
   // Создание нового питомца
-  async createPet(petData: CreatePetDto) {
+  async createPet(petData: CreatePetDto, userId: number) {
     return this.prisma.pet.create({
       data: {
         ...petData,
+        userId: userId,
         photos: petData.photos ? {
           createMany: {
             data: petData.photos.map((url, index) => ({

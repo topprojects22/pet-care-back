@@ -17,10 +17,6 @@ export class CreatePetDto {
   @IsNotEmpty()
   name: string;
 
-  @IsNumber()
-  @IsNotEmpty()
-  userId: number;
-
   @IsOptional()
   @IsDate()
   birthDate?: Date;

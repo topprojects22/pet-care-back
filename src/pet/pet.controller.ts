@@ -6,6 +6,7 @@ import {
   Param,
   Put,
   Delete,
+  Req,
 } from "@nestjs/common";
 import { PetService } from "./pet.service";
 import {
@@ -19,10 +20,10 @@ import { Auth } from "src/auth/decorators/auth.decorator";
 export class PetController {
   constructor(private readonly petService: PetService) {}
 
-  @Get("user/:userId")
+  @Get("user")
   @Auth()
-  async getUserPets(@Param("userId") userId: string) {
-    return this.petService.getUserPets(+userId);
+  async getUserPets(@Req() req) {
+    return this.petService.getUserPets(+req.user.id);
   }
 
   @Get(":id")
@@ -33,8 +34,8 @@ export class PetController {
 
   @Post()
   @Auth()
-  async createPet(@Body() petData: CreatePetDto) {
-    return this.petService.createPet(petData);
+  async createPet(@Body() petData: CreatePetDto,  @Req() req) {
+    return this.petService.createPet(petData, req.user.id);
   }
 
   @Put(":id")
