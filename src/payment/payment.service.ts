@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomBytes } from 'crypto';
 import {UpdatePaymentStatusDto} from "./dto/update-payment-status.dto";
 
 @Injectable()
@@ -15,7 +15,8 @@ export class PaymentService {
 
     async createPayment(userId: number, dto: CreatePaymentDto) {
         // Генерация номера счёта, если не задан
-        const invoiceNumber = dto.invoiceNumber || `INV-${Date.now()}-${uuidv4().slice(0, 8).toUpperCase()}`;
+        const randomId = randomBytes(4).toString('hex').toUpperCase();
+        const invoiceNumber = dto.invoiceNumber || `INV-${Date.now()}-${randomId}`;
 
         // Проверка услуги (если указана)
         if (dto.serviceId) {

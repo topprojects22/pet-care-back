@@ -79,7 +79,7 @@ export function deepClone<T>(obj: T): T {
   if (typeof obj === 'object') {
     const cloned = {} as T;
     Object.keys(obj).forEach((key) => {
-      cloned[key as keyof T] = deepClone((obj as Record<string, unknown>)[key]);
+      (cloned as Record<string, unknown>)[key] = deepClone((obj as Record<string, unknown>)[key]);
     });
     return cloned;
   }
@@ -103,7 +103,7 @@ export function deepMerge<T extends Record<string, unknown>>(
 
   Object.keys(source).forEach((key) => {
     const sourceValue = source[key];
-    const targetValue = result[key];
+    const targetValue = (result as Record<string, unknown>)[key];
 
     if (
       sourceValue &&
@@ -113,12 +113,12 @@ export function deepMerge<T extends Record<string, unknown>>(
       typeof targetValue === 'object' &&
       !Array.isArray(targetValue)
     ) {
-      result[key] = deepMerge(
+      (result as Record<string, unknown>)[key] = deepMerge(
         targetValue as Record<string, unknown>,
         sourceValue as Record<string, unknown>,
-      ) as T[keyof T];
+      );
     } else {
-      result[key] = sourceValue as T[keyof T];
+      (result as Record<string, unknown>)[key] = sourceValue;
     }
   });
 

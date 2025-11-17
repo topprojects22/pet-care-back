@@ -5,7 +5,7 @@ import {
   UserPreferencesDto,
   ChangePasswordDto,
 } from "./dto/user.dto";
-import { Auth } from "src/auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
 
 @Controller("user")
 export class UserController {

@@ -100,8 +100,8 @@ export class PerformanceProfiler {
     };
   }
 
-  getAllStats(): Record<string, ReturnType<typeof this.getStats>> {
-    const stats: Record<string, ReturnType<typeof this.getStats>> = {};
+  getAllStats(): Record<string, { count: number; total: number; average: number; min: number; max: number } | null> {
+    const stats: Record<string, { count: number; total: number; average: number; min: number; max: number } | null> = {};
     this.measurements.forEach((_, label) => {
       stats[label] = this.getStats(label);
     });

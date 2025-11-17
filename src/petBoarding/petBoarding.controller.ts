@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
 import { PetBoardingService } from './petBoarding.service';
 import { CreateBoardingBookingDto } from './dto/pet-boarding.dto';
-import { Auth } from 'src/auth/decorators/auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 
 @Controller('boarding')
 export class PetBoardingController {

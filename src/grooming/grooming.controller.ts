@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { GroomingService } from './grooming.service';
 import { CreateGroomingBookingDto } from './dto/grooming.dto';
-import { Auth } from 'src/auth/decorators/auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 
 @Controller('grooming')
 export class GroomingController {

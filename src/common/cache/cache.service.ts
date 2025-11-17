@@ -82,8 +82,9 @@ export class CacheService {
     try {
       // Для Redis можно использовать SCAN для поиска ключей по паттерну
       // Для in-memory кэша это не поддерживается
-      if (this.cacheManager.store?.name === 'redis') {
-        // Реализация для Redis
+      // Проверка типа кэша через stores (для cache-manager v5+)
+      const stores = (this.cacheManager as any).stores;
+      if (stores && stores.length > 0) {
         this.logger.warn('Pattern invalidation requires custom Redis implementation');
       }
     } catch (error) {

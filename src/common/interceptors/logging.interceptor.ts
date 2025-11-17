@@ -65,7 +65,7 @@ export class LoggingInterceptor implements NestInterceptor {
   private sanitizeBody(body: unknown): unknown {
     if (!body || typeof body !== 'object') return body;
 
-    const sanitized = { ...body };
+    const sanitized = { ...(body as Record<string, unknown>) };
     // Удаляем чувствительные данные из логов
     if ('password' in sanitized) {
       sanitized.password = '***';

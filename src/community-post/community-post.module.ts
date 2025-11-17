@@ -5,7 +5,7 @@ import { CommunityPostService } from './community-post.service';
 import { CommentService } from './comment.service';
 import { LikeService } from './like.service';
 import { PrismaService } from '../prisma.service';
-import { ShelterModule } from 'src/shelter/shelter.module'; // для валидации shelterId
+import { ShelterModule } from '../shelter/shelter.module'; // для валидации shelterId
 
 @Module({
     imports: [ShelterModule], // если нужно делегировать проверку приюта

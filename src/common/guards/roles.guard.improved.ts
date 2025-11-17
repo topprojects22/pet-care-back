@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/roles-auth.gecorator';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 import { User } from '@prisma/client';
 
 /**
@@ -41,8 +41,9 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    // Получаем роль пользователя из связанной таблицы
-    const userRole = user.role?.name || 'user';
+    // Получаем роль пользователя
+    // В JWT токене роль уже есть, иначе нужно загрузить из БД
+    const userRole = (user as any).role?.name || (user as any).role || 'user';
 
     const hasRole = requiredRoles.includes(userRole);
 

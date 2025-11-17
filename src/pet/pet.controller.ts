@@ -14,7 +14,7 @@ import {
   UpdatePetDto,
   CreatePetPassportDto,
 } from "./dto/pet.dto";
-import { Auth } from "src/auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
 
 @Controller("pet")
 export class PetController {

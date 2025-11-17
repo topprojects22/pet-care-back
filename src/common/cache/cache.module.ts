@@ -10,7 +10,7 @@ import cacheConfig from '../../config/cache.config';
     NestCacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
+      useFactory: (configService: ConfigService): any => {
         const useRedis = configService.get<boolean>('cache.useRedis', false);
         const cacheConfigValue = configService.get('cache');
 
@@ -32,7 +32,7 @@ import cacheConfig from '../../config/cache.config';
         }
 
         return {
-          ttl: cacheConfigValue.ttl,
+          ttl: cacheConfigValue.ttl * 1000, // Конвертируем в миллисекунды
           max: cacheConfigValue.max,
         };
       },

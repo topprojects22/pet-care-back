@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
 import { MedicalServicesService } from './medicalServices.service';
 import { ClinicSearchDto, CreateAppointmentDto } from './dto/medical-services.dto';
-import { Auth } from 'src/auth/decorators/auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 
 @Controller('medical')
 export class MedicalServicesController {

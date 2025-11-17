@@ -26,9 +26,7 @@ export class HealthController {
   check() {
     return this.health.check([
       () =>
-        this.prismaHealth.pingCheck('database', {
-          provider: this.prisma,
-        }),
+        this.prismaHealth.pingCheck('database', this.prisma),
     ]);
   }
 

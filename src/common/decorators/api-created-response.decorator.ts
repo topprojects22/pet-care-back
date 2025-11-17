@@ -1,23 +1,23 @@
 import { applyDecorators, Type } from '@nestjs/common';
-import { ApiCreatedResponse, getSchemaPath, ApiExtraModels } from '@nestjs/swagger';
+import { ApiCreatedResponse as SwaggerApiCreatedResponse, getSchemaPath, ApiExtraModels } from '@nestjs/swagger';
 
 /**
  * Декоратор для Swagger документации успешного создания ресурса
  * 
  * @example
  * @Post()
- * @ApiCreatedResponse(UserDto)
+ * @ApiCreatedResponseModel(UserDto)
  * async create(@Body() data: CreateUserDto) {
  *   return this.service.create(data);
  * }
  */
-export const ApiCreatedResponse = <TModel extends Type<unknown>>(
+export const ApiCreatedResponseModel = <TModel extends Type<unknown>>(
   model: TModel,
   description = 'Resource created successfully',
 ) => {
   return applyDecorators(
     ApiExtraModels(model),
-    ApiCreatedResponse({
+    SwaggerApiCreatedResponse({
       description,
       schema: {
         type: 'object',
