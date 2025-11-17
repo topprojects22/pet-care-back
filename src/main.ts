@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { PrismaService } from './prisma.service';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'node:path';
 import { ValidationPipe, Logger } from '@nestjs/common';
@@ -9,6 +8,11 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
+import { RequestLoggerInterceptor } from './common/logger/request-logger.interceptor';
+import { MetricsService } from './common/metrics/metrics.service';
+import { DatabaseMetricsInterceptor } from './common/interceptors/database-metrics.interceptor';
+import { PrismaService } from './prisma.service';
 import helmet from 'helmet';
 
 async function bootstrap() {
@@ -22,8 +26,8 @@ async function bootstrap() {
   const nodeEnv = configService.get<string>('app.nodeEnv', 'development');
 
   // Настройка Prisma shutdown hooks
-  const prismaService = app.get(PrismaService);
-  await prismaService.enableShutdownHooks(app);
+  const prismaServiceInstance = app.get(PrismaService);
+  await prismaServiceInstance.enableShutdownHooks(app);
 
   // Статические файлы
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
@@ -59,8 +63,17 @@ async function bootstrap() {
     new HttpExceptionFilter(), // Обработка всех остальных ошибок
   );
 
-  // Глобальный интерцептор для стандартизации ответов
-  app.useGlobalInterceptors(new TransformInterceptor());
+  // Глобальные интерцепторы
+  const metricsService = app.get(MetricsService);
+  const prismaService = app.get(PrismaService);
+  const databaseMetricsInterceptor = app.get(DatabaseMetricsInterceptor);
+  
+  app.useGlobalInterceptors(
+    new TransformInterceptor(),
+    new MetricsInterceptor(metricsService),
+    new RequestLoggerInterceptor(),
+    databaseMetricsInterceptor, // Отслеживание запросов к БД
+  );
 
   // Swagger документация (только в development)
   if (nodeEnv !== 'production') {

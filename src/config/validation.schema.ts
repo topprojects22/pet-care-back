@@ -26,5 +26,27 @@ export const validationSchema = Joi.object({
   // Rate Limiting
   RATE_LIMIT_TTL: Joi.number().default(60),
   RATE_LIMIT_MAX: Joi.number().default(100),
+
+  // Cache
+  USE_REDIS: Joi.boolean().default(false),
+  REDIS_HOST: Joi.string().optional(),
+  REDIS_PORT: Joi.number().optional(),
+  REDIS_PASSWORD: Joi.string().optional(),
+  REDIS_DB: Joi.number().default(0),
+  CACHE_TTL: Joi.number().default(300),
+  REDIS_TTL: Joi.number().default(3600),
+
+  // Logging
+  LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug', 'verbose').default('info'),
+  LOG_FORMAT: Joi.string().valid('json', 'simple').default('json'),
+  ENABLE_FILE_LOGGING: Joi.boolean().default(false),
+  LOG_DIRECTORY: Joi.string().default('./logs'),
+  LOG_MAX_FILES: Joi.string().default('14d'),
+  LOG_MAX_SIZE: Joi.string().default('20m'),
+
+  // Metrics
+  METRICS_ENABLED: Joi.boolean().default(true),
+  METRICS_PATH: Joi.string().default('/metrics'),
+  METRICS_PORT: Joi.number().default(9090),
 });
 

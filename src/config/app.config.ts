@@ -24,5 +24,8 @@ export default registerAs('app', () => ({
   database: {
     url: process.env.DATABASE_URL,
   },
+  app: {
+    name: process.env.APP_NAME || 'pet-care-backend',
+  },
 }));
 

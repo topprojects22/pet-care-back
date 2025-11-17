@@ -1,7 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer } from "@nestjs/common";
 import { UserModule } from "./user/user.module";
 import { AuthModule } from "./auth/auth.module";
-import { PrismaService } from "./prisma.service";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -30,6 +29,11 @@ import { CommunityPostModule } from "./community-post/community-post.module";
 import { AdmissionVetClinicModule } from "./admission-vet-clinic/admission-vet-clinic.module";
 import { HealthModule } from "./health/health.module";
 import { LoggingMiddleware } from "./common/middleware/logging.middleware";
+import { CacheModule } from "./common/cache/cache.module";
+import { LoggerModule } from "./common/logger/logger.module";
+import { MetricsModule } from "./common/metrics/metrics.module";
+import { DatabaseMetricsInterceptor } from "./common/interceptors/database-metrics.interceptor";
+import { PrismaService } from "./prisma.service";
 import appConfig from "./config/app.config";
 import { validationSchema } from "./config/validation.schema";
 
@@ -83,15 +87,25 @@ import { validationSchema } from "./config/validation.schema";
     CommunityPostModule,
     AdmissionVetClinicModule,
     HealthModule,
+    // Infrastructure modules
+    CacheModule,
+    LoggerModule,
+    MetricsModule,
   ],
   controllers: [],
   providers: [
     PrismaService,
+    {
+      provide: 'PrismaService',
+      useExisting: PrismaService,
+    },
     // Глобальный Rate Limiting Guard
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    // Database Metrics Interceptor (для отслеживания запросов к БД)
+    DatabaseMetricsInterceptor,
   ],
 })
 export class AppModule implements NestModule {
