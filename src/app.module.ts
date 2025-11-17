@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, NestModule, MiddlewareConsumer } from "@nestjs/common";
 import { UserModule } from "./user/user.module";
 import { AuthModule } from "./auth/auth.module";
 import { PrismaService } from "./prisma.service";
@@ -29,6 +29,7 @@ import { EventParticipationModule } from "./event-participation/event-participat
 import { CommunityPostModule } from "./community-post/community-post.module";
 import { AdmissionVetClinicModule } from "./admission-vet-clinic/admission-vet-clinic.module";
 import { HealthModule } from "./health/health.module";
+import { LoggingMiddleware } from "./common/middleware/logging.middleware";
 import appConfig from "./config/app.config";
 import { validationSchema } from "./config/validation.schema";
 
@@ -93,4 +94,9 @@ import { validationSchema } from "./config/validation.schema";
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // Логирование всех HTTP запросов
+    consumer.apply(LoggingMiddleware).forRoutes('*');
+  }
+}

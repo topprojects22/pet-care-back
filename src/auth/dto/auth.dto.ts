@@ -1,18 +1,22 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
+import { IsStrongPassword } from '../../common/validators/password.validator';
 
 export class LoginAuthDto {
-  @IsEmail()
+  @IsEmail({}, { message: 'Please provide a valid email address' })
   email: string;
-  @MinLength(6, { message: 'Password must be at 6 character along' })
-  @IsString()
+
+  @IsString({ message: 'Password must be a string' })
   password: string;
 }
 
 export class RegisterAuthDto {
-  @IsEmail()
+  @IsEmail({}, { message: 'Please provide a valid email address' })
   email: string;
-  @MinLength(6, { message: 'Password must be at 6 character along' })
-  @IsString()
+
+  @IsStrongPassword({
+    message:
+      'Password must be at least 8 characters long and contain uppercase, lowercase, number and special character',
+  })
   password: string;
 }
 

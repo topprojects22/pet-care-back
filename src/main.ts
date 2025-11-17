@@ -7,6 +7,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import helmet from 'helmet';
 
@@ -52,8 +53,11 @@ async function bootstrap() {
     }),
   );
 
-  // Глобальный фильтр исключений
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // Глобальные фильтры исключений
+  app.useGlobalFilters(
+    new PrismaExceptionFilter(), // Обработка ошибок Prisma
+    new HttpExceptionFilter(), // Обработка всех остальных ошибок
+  );
 
   // Глобальный интерцептор для стандартизации ответов
   app.useGlobalInterceptors(new TransformInterceptor());
