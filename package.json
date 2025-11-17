@@ -34,6 +34,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed": "ts-node seeder/seed.ts",
+    "seed:small": "SEED_USERS=5 SEED_CLINICS=3 SEED_BOARDINGS=3 npm run seed",
+    "seed:large": "SEED_USERS=50 SEED_CLINICS=20 SEED_BOARDINGS=15 npm run seed",
     "docker:build": "docker build -t pet-care-backend .",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
