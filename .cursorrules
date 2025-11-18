@@ -1,0 +1,219 @@
+# Cursor Rules for Pet Care Backend
+
+## Project Overview
+This is a NestJS backend application for a pet care management system using:
+- **Framework**: NestJS 11.x
+- **Database**: PostgreSQL with Prisma ORM
+- **Language**: TypeScript 5.x
+- **Authentication**: JWT with Passport
+- **File Storage**: Local filesystem with hashed filenames
+- **Email**: Nodemailer with Handlebars templates
+- **Caching**: Redis (optional)
+- **Monitoring**: Prometheus metrics
+
+## Code Style & Conventions
+
+### TypeScript
+- Use strict TypeScript with proper types
+- Prefer interfaces over types for object shapes
+- Use `@Injectable()` decorator for all services
+- Use dependency injection consistently
+- Avoid `any` type - use `unknown` or proper types
+- Use async/await instead of Promises chains
+- Handle errors with try-catch or proper error handling
+
+### NestJS Patterns
+- Follow NestJS module structure: Controller → Service → Repository/Prisma
+- Use DTOs for all input/output validation with `class-validator`
+- Use decorators for authentication: `@Auth()` from `auth/decorators`
+- Use interceptors for cross-cutting concerns (logging, metrics, transformation)
+- Use guards for authorization
+- Use pipes for validation and transformation
+- Use filters for exception handling
+
+### File Organization
+```
+src/
+  ├── {feature}/
+  │   ├── {feature}.controller.ts
+  │   ├── {feature}.service.ts
+  │   ├── {feature}.module.ts
+  │   └── dto/
+  │       ├── create-{feature}.dto.ts
+  │       └── update-{feature}.dto.ts
+  ├── common/
+  │   ├── services/      # Reusable services
+  │   ├── decorators/    # Custom decorators
+  │   ├── guards/        # Auth guards
+  │   ├── interceptors/  # Request/response interceptors
+  │   ├── filters/       # Exception filters
+  │   └── utils/         # Utility functions
+  └── config/            # Configuration files
+```
+
+### Naming Conventions
+- **Files**: kebab-case (e.g., `pet-photo.service.ts`)
+- **Classes**: PascalCase (e.g., `PetPhotoService`)
+- **Variables/Functions**: camelCase (e.g., `uploadPhoto`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_FILE_SIZE`)
+- **Interfaces**: PascalCase with `I` prefix optional (e.g., `IUploadConfig` or `UploadConfig`)
+- **DTOs**: PascalCase with `Dto` suffix (e.g., `CreatePetPhotoDto`)
+
+### Database (Prisma)
+- Use Prisma Client for all database operations
+- Always use transactions for multiple related operations
+- Use `select` to limit returned fields
+- Use `include` for relations when needed
+- Add indexes for frequently queried fields
+- Use migrations for schema changes
+- Never commit `.env` files with database credentials
+
+### Error Handling
+- Use NestJS built-in exceptions: `BadRequestException`, `NotFoundException`, `UnauthorizedException`, etc.
+- Create custom exceptions in `common/exceptions/` if needed
+- Always provide meaningful error messages
+- Log errors appropriately (use Logger service)
+- Don't expose sensitive information in error messages
+
+### File Upload
+- Use `FileUploadService` from `common/services/file-upload.service.ts` for all file uploads
+- Hash filenames using SHA-256 (first 16 chars)
+- Store file metadata in database using `FileStorageService`
+- Validate file types and sizes before processing
+- Use static file serving for uploaded files (configured in `main.ts`)
+
+### Authentication & Authorization
+- Use `@Auth()` decorator for protected routes
+- Check user ownership before modifying resources
+- Verify email after registration (use `EmailVerificationService`)
+- Use JWT tokens with appropriate expiration times
+- Store refresh tokens securely
+
+### API Design
+- Use RESTful conventions
+- Return consistent response format (use `TransformInterceptor`)
+- Use proper HTTP status codes
+- Document APIs with Swagger/OpenAPI
+- Use pagination for list endpoints
+- Support filtering and sorting where appropriate
+
+### Testing
+- Write unit tests for services
+- Write integration tests for controllers
+- Use test database for e2e tests
+- Mock external dependencies
+
+### Environment Variables
+- All config should be in `.env` files
+- Validate env vars using Joi schema in `config/validation.schema.ts`
+- Use `ConfigService` to access env vars
+- Never commit `.env` files
+
+### Dependencies
+- Keep dependencies up to date
+- Use exact versions in production (`package-lock.json`)
+- Review security advisories regularly
+- Prefer official NestJS packages
+
+## Common Patterns
+
+### Service Pattern
+```typescript
+@Injectable()
+export class ExampleService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(data: CreateExampleDto): Promise<Example> {
+    // Validation, business logic, then database operation
+    return this.prisma.example.create({ data });
+  }
+}
+```
+
+### Controller Pattern
+```typescript
+@Controller('examples')
+export class ExampleController {
+  constructor(private readonly service: ExampleService) {}
+
+  @Post()
+  @Auth()
+  @UsePipes(new ValidationPipe())
+  async create(@Body() dto: CreateExampleDto) {
+    return this.service.create(dto);
+  }
+}
+```
+
+### DTO Pattern
+```typescript
+export class CreateExampleDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+```
+
+## When Adding New Features
+
+1. **Create Prisma migration** if schema changes needed
+2. **Create DTOs** for request/response validation
+3. **Create Service** with business logic
+4. **Create Controller** with endpoints
+5. **Create Module** and register in `app.module.ts`
+6. **Add Swagger documentation** if needed
+7. **Write tests** for new functionality
+8. **Update API documentation**
+
+## Security Best Practices
+
+- Always validate and sanitize user input
+- Use parameterized queries (Prisma handles this)
+- Hash passwords with Argon2
+- Use HTTPS in production
+- Implement rate limiting
+- Use Helmet for security headers
+- Sanitize file uploads
+- Validate JWT tokens properly
+- Check user permissions before operations
+
+## Performance
+
+- Use database indexes for frequently queried fields
+- Implement caching for expensive operations (Redis)
+- Use pagination for large datasets
+- Optimize database queries (avoid N+1 problems)
+- Use connection pooling
+- Monitor performance with metrics
+
+## Git & Version Control
+
+- Use meaningful commit messages
+- Create feature branches
+- Keep commits atomic
+- Review code before merging
+- Use conventional commits format when possible
+
+## Documentation
+
+- Document complex business logic
+- Add JSDoc comments for public methods
+- Keep README.md updated
+- Document API endpoints with Swagger
+- Document environment variables
+
+## Questions to Ask
+
+When implementing new features, consider:
+- Is this secure?
+- Is this performant?
+- Is this maintainable?
+- Is this testable?
+- Does this follow existing patterns?
+- Is this properly validated?
+- Is this properly logged?
+

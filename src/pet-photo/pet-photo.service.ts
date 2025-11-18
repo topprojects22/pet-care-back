@@ -51,7 +51,7 @@ export class PetPhotoService {
       });
     }
 
-    return {isSuccess: true};
+    return photo;
   }
 
   async findAllForPet(petId: number) {

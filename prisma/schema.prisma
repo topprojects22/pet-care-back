@@ -45,6 +45,21 @@ model User {
   eventParticipation EventParticipation[]
 
   shelter Shelter[]
+  emailVerification EmailVerification[]
+}
+
+model EmailVerification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  verifiedAt DateTime? @map("verified_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
 }
 
 model Pet {

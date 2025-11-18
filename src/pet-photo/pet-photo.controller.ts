@@ -11,56 +11,49 @@ import {
   Req,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   BadRequestException,
 } from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
-import { diskStorage } from "multer";
-import { extname } from "path";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { PetPhotoService } from "./pet-photo.service";
 import { CreatePetPhotoDto } from "./dto/create-pet-photo.dto";
 import { UpdatePetPhotoDto } from "./dto/update-pet-photo.dto";
 import { Auth } from "../auth/decorators/auth.decorator";
+import { FileUploadService } from "../common/services/file-upload.service";
+import { FileStorageService } from "../common/services/file-storage.service";
+
+// Конфигурация для загрузки фото питомцев
+const PET_PHOTO_UPLOAD_CONFIG = {
+  destination: "uploads/pet-photos",
+  maxSize: 5 * 1024 * 1024, // 5 MB
+  prefix: "pet-photo",
+  allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+  allowedExtensions: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+};
 
 @Controller("pets/:petId/photos")
 export class PetPhotoController {
-  constructor(private readonly photoService: PetPhotoService) {}
+  private multerOptions: any;
 
-  // 🆕 Новый метод для загрузки фото с устройства
+  constructor(
+    private readonly photoService: PetPhotoService,
+    private readonly fileUploadService: FileUploadService,
+    private readonly fileStorageService: FileStorageService,
+  ) {
+    // Инициализируем опции Multer в конструкторе
+    this.multerOptions = this.fileUploadService.createMulterOptions(PET_PHOTO_UPLOAD_CONFIG);
+  }
+
+  // 🆕 Загрузка одного фото (обратная совместимость)
   @Post("upload")
   @Auth()
-  @UseInterceptors(
-    FileInterceptor("photo", {
-      storage: diskStorage({
-        destination: "./uploads/pet-photos",
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + "-" + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname).toLowerCase();
-          // Разрешаем только изображения
-          if (![".jpg", ".jpeg", ".png", ".gif"].includes(ext)) {
-            return callback(new BadRequestException("Invalid file type"), null);
-          }
-          callback(null, `photo-${uniqueSuffix}${ext}`);
-        },
-      }),
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
-          return callback(
-            new BadRequestException("Only image files are allowed!"),
-            false
-          );
-        }
-        callback(null, true);
-      },
-      limits: {
-        fileSize: 5 * 1024 * 1024, // 5 MB
-      },
-    })
-  )
+  // @ts-ignore - декораторы выполняются до инициализации класса
+  @UseInterceptors(FileInterceptor("photo", this.multerOptions))
   async upload(
     @UploadedFile() file: Express.Multer.File,
     @Param("petId") petId: string,
-    @Req() req
+    @Req() req,
+    @Body() dto?: CreatePetPhotoDto
   ) {
     if (!file) {
       throw new BadRequestException("Photo file is required");
@@ -68,16 +61,62 @@ export class PetPhotoController {
 
     const userId = req.user.id;
 
-    // Формируем URL относительно корня сервера (для фронтенда)
-    const url = `/uploads/pet-photos/${file.filename}`;
+    // Обрабатываем файл через универсальный сервис
+    const fileInfo = this.fileUploadService.processUploadedFile(file, {
+      destination: "uploads/pet-photos",
+      prefix: "pet-photo",
+    });
 
-    // Создаём фото. isPrimary можно передавать как query-параметр или в form-data,
-    // но для простоты пока делаем не главным по умолчанию.
-    const dto: CreatePetPhotoDto = {
-      isPrimary: false, // можно расширить логику позже
+    // Сохраняем в БД
+    return this.photoService.createPhoto(
+      userId,
+      +petId,
+      fileInfo.url,
+      dto || { isPrimary: false }
+    );
+  }
+
+  // 🆕 Загрузка нескольких фото
+  @Post("upload-multiple")
+  @Auth()
+  // @ts-ignore - декораторы выполняются до инициализации класса
+  @UseInterceptors(FilesInterceptor("photos", 10, this.multerOptions))
+  async uploadMultiple(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Param("petId") petId: string,
+    @Req() req
+  ) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException("At least one photo file is required");
+    }
+
+    const userId = req.user.id;
+
+    // Обрабатываем все файлы
+    const uploadedFiles = this.fileUploadService.processUploadedFiles(files, {
+      destination: "uploads/pet-photos",
+      prefix: "pet-photo",
+    });
+
+    // Сохраняем все фото в БД
+    const savedPhotos = await Promise.all(
+      uploadedFiles.map((fileInfo) =>
+        this.photoService.createPhoto(userId, +petId, fileInfo.url, {
+          isPrimary: false,
+        })
+      )
+    );
+
+    return {
+      success: true,
+      message: `Successfully uploaded ${uploadedFiles.length} photo(s)`,
+      photos: savedPhotos.map((photo, index) => ({
+        id: photo.id,
+        url: uploadedFiles[index].url,
+        filename: uploadedFiles[index].filename,
+        hash: uploadedFiles[index].hash,
+      })),
     };
-
-    return this.photoService.createPhoto(userId, +petId, url, dto);
   }
 
 // TODO проверить работу без этого метода

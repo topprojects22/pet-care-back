@@ -17,12 +17,14 @@ import { faker } from "@faker-js/faker";
 import { hash, verify } from "argon2";
 import { JwtService } from "@nestjs/jwt";
 import { User } from "@prisma/client";
+import { EmailVerificationService } from "./email-verification.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwt: JwtService
+    private readonly jwt: JwtService,
+    private readonly emailVerificationService: EmailVerificationService
   ) {}
 
   create(createAuthDto: CreateAuthDto) {
@@ -81,8 +83,20 @@ export class AuthService {
         phone: faker.phone.number("+7 (###) ###-##-##"),
         password: await hash(registerAuthDto.password),
         roleId: userRole.id,
+        isVerified: false, // Email не верифицирован при регистрации
       },
     });
+
+    // Отправляем email для верификации
+    try {
+      await this.emailVerificationService.sendVerificationEmail(
+        user.id,
+        user.email,
+      );
+    } catch (error) {
+      // Логируем ошибку, но не прерываем регистрацию
+      console.error("Failed to send verification email:", error);
+    }
 
     const tokens = await this.issueToken(user.id, "user");
 
@@ -90,6 +104,7 @@ export class AuthService {
     return {
       userFields,
       ...tokens,
+      message: "Registration successful. Please check your email to verify your account.",
     };
   }
   async getNewToken(accessTokenAuthDto: AccessTokenAuthDto) {

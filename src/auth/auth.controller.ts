@@ -8,6 +8,8 @@ import {
   Delete,
   UsePipes,
   ValidationPipe,
+  Query,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
@@ -17,10 +19,15 @@ import {
   RegisterAuthDto,
   AccessTokenAuthDto,
 } from './dto/auth.dto';
+import { EmailVerificationService } from './email-verification.service';
+import { Auth } from './decorators/auth.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly emailVerificationService: EmailVerificationService,
+  ) {}
 
   @Post()
   create(@Body() createAuthDto: CreateAuthDto) {
@@ -61,5 +68,20 @@ export class AuthController {
   @Post('refresh')
   getNewToken(@Body() accessTokenAuthDto: AccessTokenAuthDto) {
     return this.authService.getNewToken(accessTokenAuthDto);
+  }
+
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string) {
+    return this.emailVerificationService.verifyEmail(token);
+  }
+
+  @Post('resend-verification')
+  @Auth()
+  async resendVerificationEmail(@Req() req) {
+    await this.emailVerificationService.resendVerificationEmail(req.user.id);
+    return {
+      success: true,
+      message: 'Verification email has been sent',
+    };
   }
 }

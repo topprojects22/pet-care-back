@@ -54,5 +54,14 @@ export const validationSchema = Joi.object({
   METRICS_ENABLED: Joi.boolean().default(true),
   METRICS_PATH: Joi.string().default('/metrics'),
   METRICS_PORT: Joi.number().default(9090),
+
+  // Mailer
+  MAILER_HOST: Joi.string().default('smtp.gmail.com'),
+  MAILER_PORT: Joi.number().default(587),
+  MAILER_SECURE: Joi.boolean().default(false),
+  MAILER_USER: Joi.string().optional(),
+  MAILER_PASSWORD: Joi.string().optional(),
+  MAILER_FROM: Joi.string().optional(),
+  APP_URL: Joi.string().default('http://localhost:5000'),
 });
 
