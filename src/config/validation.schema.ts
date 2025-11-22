@@ -63,5 +63,16 @@ export const validationSchema = Joi.object({
   MAILER_PASSWORD: Joi.string().optional(),
   MAILER_FROM: Joi.string().optional(),
   APP_URL: Joi.string().default('http://localhost:5000'),
+
+  // Apple App Store
+  APP_STORE_SERVER_URL: Joi.string()
+    .default('https://api.storekit.itunes.apple.com')
+    .description('Apple App Store Server API URL'),
+  APP_STORE_KEY_ID: Joi.string().optional().description('Apple App Store Key ID'),
+  APP_STORE_ISSUER_ID: Joi.string().optional().description('Apple App Store Issuer ID'),
+  APP_STORE_BUNDLE_ID: Joi.string().optional().description('Apple App Store Bundle ID'),
+  APP_STORE_PRIVATE_KEY: Joi.string()
+    .optional()
+    .description('Apple App Store Private Key (base64 encoded)'),
 });
 

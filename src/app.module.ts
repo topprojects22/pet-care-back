@@ -28,6 +28,7 @@ import { EventParticipationModule } from "./event-participation/event-participat
 import { CommunityPostModule } from "./community-post/community-post.module";
 import { AdmissionVetClinicModule } from "./admission-vet-clinic/admission-vet-clinic.module";
 import { HealthModule } from "./health/health.module";
+import { SubscriptionModule } from "./subscription/subscription.module";
 import { LoggingMiddleware } from "./common/middleware/logging.middleware";
 import { CacheModule } from "./common/cache/cache.module";
 import { LoggerModule } from "./common/logger/logger.module";
@@ -87,6 +88,7 @@ import { validationSchema } from "./config/validation.schema";
     CommunityPostModule,
     AdmissionVetClinicModule,
     HealthModule,
+    SubscriptionModule,
     // Infrastructure modules
     CacheModule,
     LoggerModule,
