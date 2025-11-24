@@ -8,6 +8,6 @@ export class ValidateSubscriptionDto {
   })
   @IsString()
   @IsNotEmpty()
-  receipt_data: string;
+  receipt_data!: string;
 }
 

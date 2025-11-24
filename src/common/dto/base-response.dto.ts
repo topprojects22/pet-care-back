@@ -5,13 +5,13 @@ import { ApiProperty } from '@nestjs/swagger';
  */
 export class BaseResponseDto<T = unknown> {
   @ApiProperty({ example: true })
-  success: boolean;
+  success!: boolean;
 
   @ApiProperty()
-  data: T;
+  data!: T;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  timestamp: string;
+  timestamp!: string;
 }
 
 /**
@@ -19,16 +19,16 @@ export class BaseResponseDto<T = unknown> {
  */
 export class ErrorResponseDto {
   @ApiProperty({ example: 400 })
-  statusCode: number;
+  statusCode!: number;
 
   @ApiProperty({ example: 'Bad Request' })
-  message: string;
+  message!: string;
 
   @ApiProperty({ example: 'Validation failed' })
-  error: string;
+  error!: string;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  timestamp: string;
+  timestamp!: string;
 
   @ApiProperty({ required: false })
   details?: unknown;

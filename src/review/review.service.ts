@@ -82,7 +82,9 @@ export class ReviewService {
         }
 
         await this.prisma.review.delete({ where: { id } });
-        await this.recalculateClinicRating(review.clinicId);
+        if (review.clinicId) {
+          await this.recalculateClinicRating(review.clinicId);
+        }
         return { success: true };
     }
 }

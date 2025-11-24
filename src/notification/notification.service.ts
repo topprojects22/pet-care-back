@@ -70,13 +70,11 @@ export class NotificationService {
         where,
         select: {
           id: true,
-          title: true,
+          name: true,
           description: true,
           type: true,
           isCompleted: true,
           isConfirmed: true,
-          scheduledDate: true,
-          confirmationDate: true,
           createdAt: true,
           updatedAt: true,
           petOnNotification: {

@@ -3,10 +3,10 @@ import { IsString, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateStaffMemberDto {
     @IsString()
-    name: string; // Полное имя: "Иванова Мария Петровна"
+    name!: string; // Полное имя: "Иванова Мария Петровна"
 
     @IsString()
-    position: string; // "Ветеринарный врач", "Администратор"
+    position!: string; // "Ветеринарный врач", "Администратор"
 
     @IsString()
     @IsOptional()

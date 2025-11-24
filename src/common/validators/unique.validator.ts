@@ -34,7 +34,7 @@ export function IsUnique(
           if (!value) return true; // Если значение пустое, пропускаем (используйте @IsNotEmpty отдельно)
 
           const [modelName, fieldName] = args.constraints;
-          const prismaService = args.object['prisma'] as PrismaService;
+          const prismaService = (args.object as { prisma?: PrismaService }).prisma;
 
           if (!prismaService) {
             return false;

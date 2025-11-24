@@ -10,6 +10,7 @@ import {
   Res,
   Query,
   Header,
+  NotFoundException,
 } from "@nestjs/common";
 import { Response } from 'express';
 import { PetService } from "./pet.service";
@@ -19,7 +20,6 @@ import {
   CreatePetPassportDto,
 } from "./dto/pet.dto";
 import { GetPetsQueryDto } from "./dto/get-pets-query.dto";
-import { Query } from "@nestjs/common";
 import { Auth } from "../auth/decorators/auth.decorator";
 import { OwnershipGuard } from "../common/guards/ownership.guard";
 import { Resource } from "../common/decorators/resource.decorator";
@@ -195,7 +195,7 @@ export class PetController {
   ) {
     const passport = await this.petService.getPetPassport(+petId);
     if (!passport || !passport.chip) {
-      throw new Error('Passport not found or chip number missing');
+      throw new NotFoundException('Passport not found or chip number missing');
     }
     
     // Генерируем QR-код через библиотеку qrcode

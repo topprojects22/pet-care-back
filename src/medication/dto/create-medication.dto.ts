@@ -4,17 +4,17 @@ import { Type } from 'class-transformer';
 
 export class CreateMedicationDto {
     @IsString()
-    name: string; // Название препарата
+    name!: string; // Название препарата
 
     @IsString()
-    dosage: string; // "5 мг", "1 таблетка"
+    dosage!: string; // "5 мг", "1 таблетка"
 
     @IsString()
-    frequency: string; // "2 раза в день", "каждые 12 часов"
+    frequency!: string; // "2 раза в день", "каждые 12 часов"
 
     @Type(() => Date)
     @IsDate()
-    startDate: Date; // Когда начать приём
+    startDate!: Date; // Когда начать приём
 
     @Type(() => Date)
     @IsDate()

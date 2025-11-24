@@ -4,17 +4,17 @@ import { Type } from 'class-transformer';
 
 export class CreateShelterDto {
     @IsString()
-    name: string;
+    name!: string;
 
     @IsString()
     @IsOptional()
     description?: string;
 
     @IsString()
-    address: string;
+    address!: string;
 
     @IsPhoneNumber('RU') // или общий формат
-    phone: string;
+    phone!: string;
 
     @IsString()
     @IsOptional()

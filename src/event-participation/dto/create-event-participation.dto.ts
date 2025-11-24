@@ -4,7 +4,7 @@ import { ParticipationStatus } from '@prisma/client';
 
 export class CreateEventParticipationDto {
     @IsNumber()
-    postId: number; // ID поста с типом EVENT
+    postId!: number; // ID поста с типом EVENT
 
     @IsNumber()
     @IsOptional()

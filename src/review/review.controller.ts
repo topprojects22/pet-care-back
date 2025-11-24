@@ -6,13 +6,13 @@ import {
     Body,
     Param,
     Delete,
-    UseGuards,
-    Req,
     Query,
 } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
 
 @Controller('clinics/:clinicId/reviews')
 export class ReviewController {
@@ -23,9 +23,9 @@ export class ReviewController {
     create(
         @Param('clinicId') clinicId: string,
         @Body() dto: CreateReviewDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.reviewService.createReview(req.user.id, +clinicId, dto);
+        return this.reviewService.createReview(user.id, +clinicId, dto);
     }
 
     @Get()
@@ -44,7 +44,7 @@ export class ReviewController {
     // Опционально: удаление
     @Delete(':id')
     @Auth()
-    remove(@Param('id') id: string, @Req() req) {
-        return this.reviewService.removeReview(req.user.id, +id);
+    remove(@Param('id') id: string, @CurrentUser() user: User) {
+        return this.reviewService.removeReview(user.id, +id);
     }
 }

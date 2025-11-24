@@ -7,14 +7,14 @@ import {
     Param,
     Patch,
     Delete,
-    UseGuards,
-    Req,
     Query,
 } from '@nestjs/common';
 import { StaffMemberService } from './staff-member.service';
 import { CreateStaffMemberDto } from './dto/create-staff-member.dto';
 import { UpdateStaffMemberDto } from './dto/update-staff-member.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
 
 @Controller('clinics/:clinicId/staff')
 export class StaffMemberController {
@@ -25,9 +25,9 @@ export class StaffMemberController {
     create(
         @Param('clinicId') clinicId: string,
         @Body() dto: CreateStaffMemberDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.staffService.createStaffMember(+clinicId, req.user.id, dto);
+        return this.staffService.createStaffMember(+clinicId, user.id, dto);
     }
 
     @Get()
@@ -49,9 +49,9 @@ export class StaffMemberController {
         @Param('clinicId') clinicId: string,
         @Param('id') id: string,
         @Body() dto: UpdateStaffMemberDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.staffService.updateStaffMember(+clinicId, req.user.id, +id, dto);
+        return this.staffService.updateStaffMember(+clinicId, user.id, +id, dto);
     }
 
     @Delete(':id')
@@ -59,8 +59,8 @@ export class StaffMemberController {
     remove(
         @Param('clinicId') clinicId: string,
         @Param('id') id: string,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.staffService.removeStaffMember(+clinicId, req.user.id, +id);
+        return this.staffService.removeStaffMember(+clinicId, user.id, +id);
     }
 }

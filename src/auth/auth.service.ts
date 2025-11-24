@@ -39,6 +39,9 @@ export class AuthService {
 
   async login(loginAuthDto: LoginAuthDto) {
     const user = await this.validateUser(loginAuthDto);
+    if (!user.role) {
+      throw new UnauthorizedException('User role not found');
+    }
     const tokens = await this.issueToken(user.id, user.role.name);
 
     const userFields = this.returnUserFields(user);
@@ -146,6 +149,12 @@ export class AuthService {
         lastActivityAt: true,
       },
     });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    if (!user.role) {
+      throw new UnauthorizedException('User role not found');
+    }
     const tokens = await this.issueToken(user.id, user.role.name);
     const userFields = this.returnUserFields(user);
     
@@ -214,6 +223,10 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      name: user.name,
+      lastName: user.lastName,
+      avatarPath: user.avatarPath,
+      isVerified: user.isVerified,
     };
   }
   private async validateUser(loginDto: LoginAuthDto) {

@@ -5,10 +5,10 @@ import { PostType } from '@prisma/client'; // импортируем enum из �
 
 export class CreateCommunityPostDto {
     @IsString()
-    title: string;
+    title!: string;
 
     @IsString()
-    content: string;
+    content!: string;
 
     @IsArray()
     @IsString({ each: true })
@@ -16,7 +16,7 @@ export class CreateCommunityPostDto {
     mediaUrls?: string[];
 
     @IsEnum(PostType)
-    postType: PostType;
+    postType!: PostType;
 
     @IsString()
     @IsOptional()

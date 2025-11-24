@@ -38,7 +38,7 @@ export class PetCardService {
     async updateCard(userId: number, petId: number, dto: UpdatePetCardDto) {
         const card = await this.findOneByPetId(petId);
         const pet = await this.prisma.pet.findUnique({ where: { id: petId }, select: { userId: true } });
-        if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
+        if (!pet || pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
         return this.prisma.petCard.update({
             where: { petId },

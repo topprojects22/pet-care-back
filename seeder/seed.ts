@@ -1,4 +1,4 @@
-import { PrismaClient, PetGender, BreedSize, NotificationType, BookingStatus, PaymentMethod } from '@prisma/client';
+import { PrismaClient, PetGender, BreedSize, NotificationType, BookingStatus, PaymentMethod, PostType, ParticipationStatus, AdoptionStatus, DonationStatus, PaymentSessionStatus } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import { hash } from 'argon2';
 
@@ -80,6 +80,18 @@ async function main() {
     // Шаг 6: Создание гостиниц для животных
     await step6_createBoardings(config, users);
 
+    // Шаг 7: Создание приютов и животных
+    const { shelters, shelterAnimals } = await step7_createShelters(config, users, animalTypes, breeds);
+
+    // Шаг 8: Создание социальных постов и взаимодействий
+    await step8_createSocialContent(config, users, shelters);
+
+    // Шаг 9: Создание запросов на усыновление и пожертвований
+    await step9_createAdoptionAndDonations(config, users, shelters, shelterAnimals);
+
+    // Шаг 10: Создание платежных сессий и дневников питомцев
+    await step10_createPaymentSessionsAndJournals(config, users, services);
+
     log.success(`✅ Заполнение базы данных завершено успешно за ${timer.format()}!`);
     await printStatistics();
   } catch (error) {
@@ -107,13 +119,14 @@ function getConfig(): SeedConfig {
 }
 
 async function step1_cleanDatabase() {
-  log.step(1, 6, 'Очистка базы данных...');
+  log.step(1, 10, 'Очистка базы данных...');
   
   const tables = [
     'PetOnNotification',
     'HealthMetric',
     'GroomingRecord',
     'Payment',
+    'PaymentSession',
     'Review',
     'StaffMember',
     'PetPhoto',
@@ -123,6 +136,7 @@ async function step1_cleanDatabase() {
     'PetCard',
     'PetPassport',
     'Pet',
+    'PetJournalEntry',
     'Service',
     'Clinic',
     'AnimalBreed',
@@ -136,9 +150,15 @@ async function step1_cleanDatabase() {
     'PetBoardingReview',
     'PetBoardingStaff',
     'CommunityPost',
-    'Comment',
-    'Like',
+    'PostComment',
+    'PostLike',
     'EventParticipation',
+    'Shelter',
+    'ShelterAnimal',
+    'AdoptionRequest',
+    'Donation',
+    'EmailVerification',
+    'PasswordReset',
   ];
 
   try {
@@ -155,7 +175,7 @@ async function step1_cleanDatabase() {
 }
 
 async function step2_createBaseData() {
-  log.step(2, 6, 'Создание базовых данных (роли, типы животных, породы)...');
+  log.step(2, 10, 'Создание базовых данных (роли, типы животных, породы)...');
 
   // Создание ролей
   await prisma.role.createMany({
@@ -217,7 +237,7 @@ async function step2_createBaseData() {
 }
 
 async function step3_createClinics(config: SeedConfig) {
-  log.step(3, 6, `Создание клиник (${config.clinics} шт.) и услуг...`);
+  log.step(3, 10, `Создание клиник (${config.clinics} шт.) и услуг...`);
 
   const clinics = await Promise.all(
     Array.from({ length: config.clinics }).map((_, i) =>
@@ -304,7 +324,7 @@ async function step3_createClinics(config: SeedConfig) {
 }
 
 async function step4_createUsers(config: SeedConfig, roles: any[]) {
-  log.step(4, 6, `Создание пользователей (${config.users} шт.)...`);
+  log.step(4, 10, `Создание пользователей (${config.users} шт.)...`);
 
   const defaultPassword = await hash('Qwerty123@');
   const userRole = roles.find(r => r.name === 'user');
@@ -376,7 +396,7 @@ async function step5_createPets(
   clinics: any[],
   services: any[]
 ) {
-  log.step(5, 6, 'Создание питомцев и связанных данных...');
+  log.step(5, 10, 'Создание питомцев и связанных данных...');
 
   let totalPets = 0;
 
@@ -599,7 +619,7 @@ async function createPetRelatedData(pet: any, breed: any, clinics: any[], servic
 }
 
 async function step6_createBoardings(config: SeedConfig, users: any[]) {
-  log.step(6, 6, `Создание гостиниц для животных (${config.boardings} шт.)...`);
+  log.step(6, 10, `Создание гостиниц для животных (${config.boardings} шт.)...`);
 
   const boardings = await Promise.all(
     Array.from({ length: config.boardings }).map((_, i) =>
@@ -708,6 +728,299 @@ async function step6_createBoardings(config: SeedConfig, users: any[]) {
   return boardings;
 }
 
+async function step7_createShelters(
+  config: SeedConfig,
+  users: any[],
+  animalTypes: any[],
+  breeds: any[]
+) {
+  log.step(7, 10, 'Создание приютов и животных...');
+
+  const shelterOwners = users.slice(0, Math.min(3, users.length));
+  const shelters = await Promise.all(
+    shelterOwners.map(owner =>
+      prisma.shelter.create({
+        data: {
+          name: `${faker.company.name()} Animal Shelter`,
+          description: faker.lorem.paragraphs(2),
+          address: faker.location.streetAddress(),
+          phone: faker.phone.number(),
+          email: faker.internet.email(),
+          website: faker.internet.url(),
+          geoCoordinates: `${faker.location.latitude()}, ${faker.location.longitude()}`,
+          photos: Array.from({ length: 5 }, () => faker.image.urlLoremFlickr({ category: 'animal' })),
+          ownerId: owner.id,
+          isActive: true,
+        },
+      })
+    )
+  );
+
+  const shelterAnimals = [];
+  for (const shelter of shelters) {
+    const animalCount = faker.number.int({ min: 5, max: 15 });
+    const animals = await Promise.all(
+      Array.from({ length: animalCount }).map(async () => {
+        const animalType = faker.helpers.arrayElement(animalTypes);
+        const breed = faker.helpers.arrayElement(breeds.filter(b => b.animalTypeId === animalType.id)) || breeds[0];
+        
+        return prisma.shelterAnimal.create({
+          data: {
+            shelterId: shelter.id,
+            name: faker.person.firstName(),
+            animalTypeId: animalType.id,
+            breedId: breed.id,
+            gender: faker.helpers.arrayElement(Object.values(PetGender)),
+            ageEstimate: faker.number.int({ min: 1, max: 120 }), // в месяцах
+            description: faker.lorem.paragraph(),
+            isAdopted: faker.datatype.boolean({ probability: 0.3 }),
+            adoptionDate: faker.datatype.boolean({ probability: 0.2 }) ? faker.date.past() : null,
+            photos: Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () => 
+              faker.image.urlLoremFlickr({ category: 'animals' })
+            ),
+            specialNeeds: faker.datatype.boolean({ probability: 0.4 }) ? faker.lorem.sentence() : null,
+          },
+        });
+      })
+    );
+    shelterAnimals.push(...animals);
+  }
+
+  log.success(`Создано: ${shelters.length} приютов, ${shelterAnimals.length} животных`);
+  return { shelters, shelterAnimals };
+}
+
+async function step8_createSocialContent(
+  config: SeedConfig,
+  users: any[],
+  shelters: any[]
+) {
+  log.step(8, 10, 'Создание социальных постов и взаимодействий...');
+
+  const posts = [];
+  const postTypes: PostType[] = [PostType.ANNOUNCEMENT, PostType.EVENT, PostType.BLOG, PostType.ADOPTION];
+
+  // Посты от пользователей
+  for (let i = 0; i < Math.min(20, users.length * 2); i++) {
+    const user = faker.helpers.arrayElement(users);
+    const postType = faker.helpers.arrayElement(postTypes);
+    
+    const post = await prisma.communityPost.create({
+      data: {
+        authorId: user.id,
+        title: faker.lorem.sentence(),
+        content: faker.lorem.paragraphs(faker.number.int({ min: 1, max: 3 })),
+        mediaUrls: Array.from({ length: faker.number.int({ min: 0, max: 3 }) }, () => 
+          faker.image.urlLoremFlickr({ category: 'animals' })
+        ),
+        postType,
+        isPinned: faker.datatype.boolean({ probability: 0.1 }),
+        location: faker.datatype.boolean({ probability: 0.5 }) ? faker.location.city() : null,
+        eventDate: postType === 'EVENT' ? faker.date.future() : null,
+      },
+    });
+    posts.push(post);
+
+    // Лайки для поста
+    const likers = faker.helpers.arrayElements(users, { min: 0, max: Math.min(10, users.length) });
+    await prisma.postLike.createMany({
+      data: likers.map(liker => ({
+        postId: post.id,
+        userId: liker.id,
+      })),
+      skipDuplicates: true,
+    });
+
+    // Комментарии для поста
+    const commentCount = faker.number.int({ min: 0, max: 5 });
+    const postComments: number[] = [];
+    for (let j = 0; j < commentCount; j++) {
+      const commenter = faker.helpers.arrayElement(users);
+      const comment = await prisma.postComment.create({
+        data: {
+          postId: post.id,
+          userId: commenter.id,
+          content: faker.lorem.sentences(faker.number.int({ min: 1, max: 2 })),
+          parentId: faker.datatype.boolean({ probability: 0.3 }) && postComments.length > 0
+            ? faker.helpers.arrayElement(postComments)
+            : null,
+        },
+      });
+      postComments.push(comment.id);
+    }
+  }
+
+  // Посты от приютов
+  for (const shelter of shelters) {
+    const shelterPost = await prisma.communityPost.create({
+      data: {
+        shelterId: shelter.id,
+        title: faker.lorem.sentence(),
+        content: faker.lorem.paragraphs(2),
+        mediaUrls: Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () => 
+          faker.image.urlLoremFlickr({ category: 'animals' })
+        ),
+        postType: faker.helpers.arrayElement([PostType.ANNOUNCEMENT, PostType.ADOPTION]),
+        isPinned: faker.datatype.boolean({ probability: 0.2 }),
+        location: shelter.address,
+      },
+    });
+    posts.push(shelterPost);
+  }
+
+  // Участие в событиях
+  const allPosts = await prisma.communityPost.findMany({
+    where: { postType: PostType.EVENT },
+  });
+  for (const eventPost of allPosts.slice(0, Math.min(5, allPosts.length))) {
+    const participants = faker.helpers.arrayElements(users, { min: 1, max: Math.min(10, users.length) });
+    const pets = await prisma.pet.findMany();
+    
+    await prisma.eventParticipation.createMany({
+      data: participants.map(participant => ({
+        postId: eventPost.id,
+        userId: participant.id,
+        petId: faker.datatype.boolean({ probability: 0.7 }) && pets.length > 0
+          ? faker.helpers.arrayElement(pets).id
+          : null,
+        status: faker.helpers.arrayElement([ParticipationStatus.PENDING, ParticipationStatus.CONFIRMED, ParticipationStatus.CANCELLED]),
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  log.success(`Создано: ${posts.length} постов, лайки, комментарии и участия в событиях`);
+}
+
+async function step9_createAdoptionAndDonations(
+  config: SeedConfig,
+  users: any[],
+  shelters: any[],
+  shelterAnimals: any[]
+) {
+  log.step(9, 10, 'Создание запросов на усыновление и пожертвований...');
+
+  // Запросы на усыновление
+  const availableAnimals = shelterAnimals.filter(a => !a.isAdopted);
+  let adoptionRequestsCount = 0;
+
+  for (let i = 0; i < Math.min(10, availableAnimals.length); i++) {
+    const animal = faker.helpers.arrayElement(availableAnimals);
+    if (animal.isAdopted) continue;
+
+    const user = faker.helpers.arrayElement(users);
+    const shelter = shelters.find(s => s.id === animal.shelterId);
+
+    await prisma.adoptionRequest.create({
+      data: {
+        shelterId: shelter!.id,
+        animalId: animal.id,
+        userId: user.id,
+        status: faker.helpers.arrayElement([AdoptionStatus.PENDING, AdoptionStatus.APPROVED, AdoptionStatus.REJECTED, AdoptionStatus.CANCELLED]),
+        contactPhone: user.phone || faker.phone.number(),
+        address: user.address || faker.location.streetAddress(),
+        adoptionReason: faker.lorem.sentence(),
+        previousExperience: faker.datatype.boolean(),
+        agreementAccepted: true,
+        notes: faker.datatype.boolean({ probability: 0.5 }) ? faker.lorem.sentence() : null,
+        reviewedAt: faker.datatype.boolean({ probability: 0.5 }) ? faker.date.recent() : null,
+      },
+    });
+    adoptionRequestsCount++;
+  }
+
+  // Пожертвования
+  let donationsCount = 0;
+  for (let i = 0; i < Math.min(15, users.length * 2); i++) {
+    const shelter = faker.helpers.arrayElement(shelters);
+    const user = faker.datatype.boolean({ probability: 0.8 }) 
+      ? faker.helpers.arrayElement(users)
+      : null;
+
+    await prisma.donation.create({
+      data: {
+        shelterId: shelter.id,
+        userId: user?.id || null,
+        amount: faker.number.float({ min: 100, max: 10000, precision: 0.01 }),
+        currency: 'RUB',
+        message: faker.datatype.boolean({ probability: 0.6 }) ? faker.lorem.sentence() : null,
+        anonymous: !user || faker.datatype.boolean({ probability: 0.2 }),
+        recurring: faker.datatype.boolean({ probability: 0.1 }),
+        status: faker.helpers.arrayElement([DonationStatus.PENDING, DonationStatus.PAID, DonationStatus.FAILED, DonationStatus.REFUNDED]),
+        transactionId: faker.datatype.boolean({ probability: 0.7 })
+          ? `TXN-${faker.string.numeric(8)}`
+          : null,
+        paidAt: faker.datatype.boolean({ probability: 0.6 }) ? faker.date.recent() : null,
+      },
+    });
+    donationsCount++;
+  }
+
+  log.success(`Создано: ${adoptionRequestsCount} запросов на усыновление, ${donationsCount} пожертвований`);
+}
+
+async function step10_createPaymentSessionsAndJournals(
+  config: SeedConfig,
+  users: any[],
+  services: any[]
+) {
+  log.step(10, 10, 'Создание платежных сессий и дневников питомцев...');
+
+  // Платежные сессии
+  let sessionsCount = 0;
+  for (let i = 0; i < Math.min(20, users.length * 2); i++) {
+    const user = faker.helpers.arrayElement(users);
+    const service = faker.helpers.arrayElement(services);
+    const serviceTypes = ['veterinary', 'grooming', 'boarding', 'charity', 'subscription'] as const;
+
+    await prisma.paymentSession.create({
+      data: {
+        userId: user.id,
+        amount: service.price,
+        currency: 'RUB',
+        description: faker.lorem.sentence(),
+        status: faker.helpers.arrayElement([PaymentSessionStatus.PENDING, PaymentSessionStatus.PROCESSING, PaymentSessionStatus.PAID, PaymentSessionStatus.FAILED, PaymentSessionStatus.EXPIRED, PaymentSessionStatus.CANCELLED]),
+        serviceId: service.id,
+        serviceType: faker.helpers.arrayElement(serviceTypes),
+        metadata: {
+          petId: faker.datatype.boolean({ probability: 0.7 }) ? faker.number.int({ min: 1, max: 100 }) : null,
+          clinicId: service.clinicId,
+          appointmentDate: faker.date.future().toISOString(),
+        },
+        expiresAt: faker.date.future({ years: 0.02 }), // примерно 7 дней
+        paymentMethods: faker.helpers.arrayElements(['card', 'apple_pay', 'google_pay'], { min: 1, max: 3 }),
+        paidAt: faker.datatype.boolean({ probability: 0.5 }) ? faker.date.recent() : null,
+      },
+    });
+    sessionsCount++;
+  }
+
+  // Дневники питомцев
+  const pets = await prisma.pet.findMany();
+  let journalsCount = 0;
+
+  for (let i = 0; i < Math.min(30, pets.length * 2); i++) {
+    const pet = faker.helpers.arrayElement(pets);
+    const moods = ['игривый', 'сонный', 'активный', 'спокойный', 'взволнованный', 'грустный'];
+
+    await prisma.petJournalEntry.create({
+      data: {
+        petId: pet.id,
+        title: faker.lorem.sentence(),
+        content: faker.lorem.paragraphs(faker.number.int({ min: 1, max: 3 })),
+        mediaUrls: Array.from({ length: faker.number.int({ min: 0, max: 3 }) }, () => 
+          faker.image.urlLoremFlickr({ category: 'animals' })
+        ),
+        mood: faker.helpers.arrayElement(moods),
+        location: faker.datatype.boolean({ probability: 0.5 }) ? faker.location.city() : null,
+      },
+    });
+    journalsCount++;
+  }
+
+  log.success(`Создано: ${sessionsCount} платежных сессий, ${journalsCount} записей в дневниках`);
+}
+
 async function printStatistics() {
   console.log('');
   log.info('📊 Статистика базы данных:');
@@ -722,6 +1035,16 @@ async function printStatistics() {
     medications: await prisma.medication.count(),
     payments: await prisma.payment.count(),
     reviews: await prisma.review.count(),
+    shelters: await prisma.shelter.count(),
+    shelterAnimals: await prisma.shelterAnimal.count(),
+    communityPosts: await prisma.communityPost.count(),
+    postLikes: await prisma.postLike.count(),
+    postComments: await prisma.postComment.count(),
+    eventParticipations: await prisma.eventParticipation.count(),
+    adoptionRequests: await prisma.adoptionRequest.count(),
+    donations: await prisma.donation.count(),
+    paymentSessions: await prisma.paymentSession.count(),
+    petJournalEntries: await prisma.petJournalEntry.count(),
   };
 
   for (const [key, value] of Object.entries(stats)) {

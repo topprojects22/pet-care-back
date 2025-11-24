@@ -58,7 +58,7 @@ export class MedicationService {
       where: { id: med.petId },
       select: { userId: true },
     });
-    if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
+    if (!pet || pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
     return this.prisma.medication.update({
       where: { id },
@@ -72,7 +72,7 @@ export class MedicationService {
       where: { id: med.petId },
       select: { userId: true },
     });
-    if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
+    if (!pet || pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
     return this.prisma.medication.delete({ where: { id } });
   }

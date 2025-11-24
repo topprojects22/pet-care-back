@@ -11,15 +11,15 @@ import {
 export class CreateGroomingBookingDto {
   @IsNumber()
   @IsNotEmpty()
-  petId: number;
+  petId!: number;
 
   @IsString()
   @IsNotEmpty()
-  status: string;
+  status!: string;
 
   @IsDate()
   @IsNotEmpty()
-  date: Date;
+  date!: Date;
 
   @IsOptional()
   @IsString()
@@ -27,26 +27,26 @@ export class CreateGroomingBookingDto {
 
   @IsString()
   @IsNotEmpty()
-  serviceType: string;
+  serviceType!: string;
 }
 
 // grooming-service.dto.ts
 export class GroomingServiceDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
-  description: string;
+  description!: string;
 
   @IsNumber()
   @IsNotEmpty()
   @Min(0)
-  price: number;
+  price!: number;
 
   @IsNumber()
   @IsNotEmpty()
   @Min(10)
-  duration: number;
+  duration!: number;
 }

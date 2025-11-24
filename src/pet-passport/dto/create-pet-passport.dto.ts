@@ -3,7 +3,7 @@ import { IsInt, IsString, IsOptional, IsDate } from 'class-validator';
 
 export class CreatePetPassportDto {
     @IsInt()
-    chip: number; // уникальный номер чипа
+    chip!: number; // уникальный номер чипа
 
     @IsDate()
     @IsOptional()

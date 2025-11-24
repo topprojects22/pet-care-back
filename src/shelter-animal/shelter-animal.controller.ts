@@ -6,14 +6,14 @@ import {
     Body,
     Param,
     Patch,
-    UseGuards,
-    Req,
     Query,
 } from '@nestjs/common';
 import { ShelterAnimalService } from './shelter-animal.service';
 import { CreateShelterAnimalDto } from './dto/create-shelter-animal.dto';
 import { UpdateShelterAnimalDto } from './dto/update-shelter-animal.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
 
 @Controller('shelters/:shelterId/animals')
 export class ShelterAnimalController {
@@ -24,9 +24,9 @@ export class ShelterAnimalController {
     create(
         @Param('shelterId') shelterId: string,
         @Body() dto: CreateShelterAnimalDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.animalService.createAnimal(+shelterId, req.user.id, dto);
+        return this.animalService.createAnimal(+shelterId, user.id, dto);
     }
 
     @Get()
@@ -73,9 +73,9 @@ export class ShelterAnimalController {
         @Param('shelterId') shelterId: string,
         @Param('id') id: string,
         @Body() dto: UpdateShelterAnimalDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.animalService.updateAnimal(+shelterId, req.user.id, +id, dto);
+        return this.animalService.updateAnimal(+shelterId, user.id, +id, dto);
     }
 
     @Patch(':id/adopt')
@@ -83,8 +83,8 @@ export class ShelterAnimalController {
     adopt(
         @Param('shelterId') shelterId: string,
         @Param('id') id: string,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.animalService.markAsAdopted(+shelterId, req.user.id, +id);
+        return this.animalService.markAsAdopted(+shelterId, user.id, +id);
     }
 }

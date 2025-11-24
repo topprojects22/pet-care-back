@@ -10,6 +10,7 @@ import { CreateAdmissionVetClinicDto } from './dto/create-admission-vet-clinic.d
 import { PetCardUpdaterService } from '../pet-card/pet-card-updater.service';
 import { NotificationSchedulerService } from '../notification/notification.scheduler.service';
 import { UpdateAdmissionVetClinicDto } from './dto/update-admission-vet-clinic.dto';
+import { createPaginatedResponse } from '../common/utils/response.util';
 
 @Injectable()
 export class AdmissionVetClinicService {
@@ -31,7 +32,7 @@ export class AdmissionVetClinicService {
         const admission = await this.prisma.admissionVetClinic.create({
         data: {
             procedure: dto.procedure,
-            description: dto.description,
+            description: dto.description || '',
             diagnosis: dto.diagnosis,
             recomendation: dto.recomendation,
             visitDate: dto.visitDate,
@@ -174,11 +175,12 @@ export class AdmissionVetClinicService {
 
     async updateAdmission(userId: number, id: number, dto: UpdateAdmissionVetClinicDto) {
         const admission = await this.findOne(id);
+        if (!admission.pet) throw new NotFoundException('Pet not found');
         const pet = await this.prisma.pet.findUnique({
-            where: { id: admission.petId },
+            where: { id: admission.pet.id },
             select: { userId: true },
         });
-        if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
+        if (!pet || pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
         return this.prisma.admissionVetClinic.update({
             where: { id },
@@ -188,13 +190,13 @@ export class AdmissionVetClinicService {
 
     async removeAdmission(userId: number, id: number) {
         const admission = await this.findOne(id);
+        if (!admission.pet) throw new NotFoundException('Pet not found');
         const pet = await this.prisma.pet.findUnique({
-            where: { id: admission.petId },
+            where: { id: admission.pet.id },
             select: { userId: true },
         });
-        if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
+        if (!pet || pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
         return this.prisma.admissionVetClinic.delete({ where: { id } });
     }
-}
 }

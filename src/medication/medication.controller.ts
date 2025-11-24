@@ -7,14 +7,14 @@ import {
   Param,
   Patch,
   Delete,
-  UseGuards,
-  Req,
   Query,
 } from '@nestjs/common';
 import { MedicationService } from './medication.service';
 import { CreateMedicationDto } from './dto/create-medication.dto';
 import { UpdateMedicationDto } from './dto/update-medication.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
 
 @Controller('pets/:petId/medications')
 export class MedicationController {
@@ -25,9 +25,9 @@ export class MedicationController {
   create(
       @Param('petId') petId: string,
       @Body() dto: CreateMedicationDto,
-      @Req() req,
+      @CurrentUser() user: User,
   ) {
-    return this.medicationService.createMedication(req.user.id, +petId, dto);
+    return this.medicationService.createMedication(user.id, +petId, dto);
   }
 
   @Get()
@@ -48,14 +48,14 @@ export class MedicationController {
   update(
       @Param('id') id: string,
       @Body() dto: UpdateMedicationDto,
-      @Req() req,
+      @CurrentUser() user: User,
   ) {
-    return this.medicationService.updateMedication(req.user.id, +id, dto);
+    return this.medicationService.updateMedication(user.id, +id, dto);
   }
 
   @Delete(':id')
   @Auth()
-  remove(@Param('id') id: string, @Req() req) {
-    return this.medicationService.removeMedication(req.user.id, +id);
+  remove(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.medicationService.removeMedication(user.id, +id);
   }
 }

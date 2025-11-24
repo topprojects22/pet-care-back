@@ -68,7 +68,7 @@ export class PetJournalEntryService {
             select: { userId: true },
         });
 
-        if (pet.userId !== userId) {
+        if (!pet || pet.userId !== userId) {
             throw new ForbiddenException('Not your pet');
         }
 
@@ -86,7 +86,7 @@ export class PetJournalEntryService {
             select: { userId: true },
         });
 
-        if (pet.userId !== userId) {
+        if (!pet || pet.userId !== userId) {
             throw new ForbiddenException('Not your pet');
         }
 

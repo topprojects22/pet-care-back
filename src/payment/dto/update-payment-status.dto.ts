@@ -4,5 +4,5 @@ import { PaymentStatus } from '@prisma/client';
 
 export class UpdatePaymentStatusDto {
     @IsEnum(PaymentStatus)
-    status: PaymentStatus;
+    status!: PaymentStatus;
 }

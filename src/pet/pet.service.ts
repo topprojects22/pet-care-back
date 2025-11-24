@@ -136,9 +136,12 @@ export class PetService {
         petCard: {
           select: {
             id: true,
-            cardNumber: true,
-            issueDate: true,
-            expiryDate: true,
+            status: true,
+            health: true,
+            vaccine: true,
+            totalSpent: true,
+            lastVetVisit: true,
+            nextVetVisit: true,
           },
         },
         medications: {
@@ -149,7 +152,7 @@ export class PetService {
             frequency: true,
             startDate: true,
             endDate: true,
-            notes: true,
+            description: true,
           },
           orderBy: { startDate: 'desc' },
         },

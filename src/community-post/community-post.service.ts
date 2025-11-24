@@ -132,13 +132,17 @@ export class CommunityPostService {
         return createPaginatedResponse(data, page, limit, total);
     }
 
-    async findOne(id: number) {
+    async findOne(id: number, userId?: number) {
         const post = await this.prisma.communityPost.findUnique({
             where: { id },
             include: {
                 author: { select: { id: true, name: true, avatarPath: true } },
                 shelter: { select: { id: true, name: true } },
-                likes: { select: { userId: true } },
+                likes: userId ? {
+                    where: { userId },
+                    select: { id: true },
+                    take: 1,
+                } : undefined,
                 comments: {
                     where: { parentId: null },
                     include: {

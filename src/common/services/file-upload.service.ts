@@ -205,8 +205,9 @@ export class FileUploadService {
         await fs.unlink(fullPath);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new InternalServerErrorException(
-        `Failed to delete file: ${error.message}`,
+        `Failed to delete file: ${errorMessage}`,
       );
     }
   }

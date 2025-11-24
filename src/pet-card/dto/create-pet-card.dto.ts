@@ -3,16 +3,16 @@ import { IsString, IsOptional, IsInt, IsDate } from 'class-validator';
 
 export class CreatePetCardDto {
     @IsString()
-    status: string; // "здоров", "на лечении", "восстановление"
+    status!: string; // "здоров", "на лечении", "восстановление"
 
     @IsString()
-    health: string; // общее состояние
+    health!: string; // общее состояние
 
     @IsString()
-    vaccine: string; // актуальные вакцины
+    vaccine!: string; // актуальные вакцины
 
     @IsInt()
-    totalSpent: number; // можно инициализировать как 0
+    totalSpent!: number; // можно инициализировать как 0
 
     @IsDate()
     @IsOptional()

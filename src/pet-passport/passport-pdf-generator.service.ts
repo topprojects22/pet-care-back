@@ -1,6 +1,6 @@
 // src/pet-passport/services/passport-pdf-generator.service.ts
 import { Injectable } from '@nestjs/common';
-import * as PDFDocument from 'pdfkit';
+import PDFDocument from 'pdfkit';
 import { PetPassport } from '@prisma/client';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class PassportPdfGeneratorService {
     async generatePdf(passport: any): Promise<Buffer> {
         const doc = new PDFDocument({ size: 'A4', margin: 50 });
         const chunks: Buffer[] = [];
-        doc.on('data', chunk => chunks.push(chunk));
+        doc.on('data', (chunk: Buffer) => chunks.push(chunk));
         doc.on('end', () => {});
 
         // Заголовок
@@ -27,7 +27,7 @@ export class PassportPdfGeneratorService {
             doc.moveDown();
             doc.text('Прививки:');
             const vaccines = JSON.parse(passport.vaccinationHistory as string);
-            vaccines.forEach(v => doc.text(`- ${v.name}: ${v.date}`));
+            vaccines.forEach((v: any) => doc.text(`- ${v.name}: ${v.date}`));
         }
 
         // QR-код (можно вставить как изображение)

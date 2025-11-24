@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma.service';
 import { CreateVaccinationDto } from './dto/create-vaccination.dto';
 import {UpdateVaccinationDto} from "./dto/update-vaccination.dto";
+import { createPaginatedResponse } from '../common/utils/response.util';
 
 @Injectable()
 export class VaccinationService {
@@ -127,10 +128,16 @@ export class VaccinationService {
 
   async updateVaccination(userId: number, id: number, dto: UpdateVaccinationDto) {
     const vac = await this.findOne(id);
+    if (!vac.pet) {
+      throw new NotFoundException('Pet not found for this vaccination');
+    }
     const pet = await this.prisma.pet.findUnique({
-      where: { id: vac.petId },
+      where: { id: vac.pet.id },
       select: { userId: true },
     });
+    if (!pet) {
+      throw new NotFoundException('Pet not found');
+    }
     if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
     return this.prisma.vaccination.update({
@@ -141,10 +148,16 @@ export class VaccinationService {
 
   async removeVaccination(userId: number, id: number) {
     const vac = await this.findOne(id);
+    if (!vac.pet) {
+      throw new NotFoundException('Pet not found for this vaccination');
+    }
     const pet = await this.prisma.pet.findUnique({
-      where: { id: vac.petId },
+      where: { id: vac.pet.id },
       select: { userId: true },
     });
+    if (!pet) {
+      throw new NotFoundException('Pet not found');
+    }
     if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
     return this.prisma.vaccination.delete({ where: { id } });

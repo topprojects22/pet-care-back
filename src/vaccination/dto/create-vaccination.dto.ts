@@ -4,11 +4,11 @@ import { Type } from 'class-transformer';
 
 export class CreateVaccinationDto {
     @IsString()
-    name: string; // Название вакцины (например, "Nobivac DHPPi")
+    name!: string; // Название вакцины (например, "Nobivac DHPPi")
 
     @Type(() => Date)
     @IsDate()
-    date: Date; // Когда сделана прививка
+    date!: Date; // Когда сделана прививка
 
     @Type(() => Date)
     @IsDate()

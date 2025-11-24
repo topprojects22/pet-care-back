@@ -24,7 +24,6 @@ import { CurrentUser } from "../common/decorators/user.decorator";
 import { User } from "@prisma/client";
 import { Resource } from "../common/decorators/resource.decorator";
 import { OwnershipGuard } from "../common/guards/ownership.guard";
-import { UseGuards } from "@nestjs/common";
 
 // Конфигурация для загрузки фото питомцев
 const PET_PHOTO_UPLOAD_CONFIG = {

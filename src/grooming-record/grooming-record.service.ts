@@ -50,7 +50,7 @@ export class GroomingRecordService {
             where: { id: record.petId },
             select: { userId: true },
         });
-        if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
+        if (!pet || pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
         return this.prisma.groomingRecord.update({
             where: { id },
@@ -64,7 +64,7 @@ export class GroomingRecordService {
             where: { id: record.petId },
             select: { userId: true },
         });
-        if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
+        if (!pet || pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
         return this.prisma.groomingRecord.delete({ where: { id } });
     }

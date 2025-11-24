@@ -3,20 +3,20 @@ import { IsString, IsNotEmpty, IsBoolean, IsOptional, IsPhoneNumber } from 'clas
 export class AdoptAnimalDto {
   @IsString()
   @IsNotEmpty()
-  contactPhone: string;
+  contactPhone!: string;
 
   @IsString()
   @IsNotEmpty()
-  address: string;
+  address!: string;
 
   @IsString()
   @IsOptional()
   adoptionReason?: string;
 
   @IsBoolean()
-  previousExperience: boolean;
+  previousExperience!: boolean;
 
   @IsBoolean()
-  agreementAccepted: boolean;
+  agreementAccepted!: boolean;
 }
 

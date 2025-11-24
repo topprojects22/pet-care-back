@@ -15,7 +15,7 @@ import { PetGender } from "@prisma/client";
 export class CreatePetDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsDate()
@@ -80,11 +80,11 @@ export class UpdatePetDto {
 export class CreatePetPassportDto {
   @IsNumber()
   @IsNotEmpty()
-  petId: number;
+  petId!: number;
 
   @IsNumber()
   @IsNotEmpty()
-  chip: number;
+  chip!: number;
 
   @IsOptional()
   @IsDate()
@@ -119,11 +119,11 @@ export class CreatePetPassportDto {
 export class PetPhotoDto {
   @IsNumber()
   @IsNotEmpty()
-  petId: number;
+  petId!: number;
 
   @IsString()
   @IsNotEmpty()
-  url: string;
+  url!: string;
 
   @IsOptional()
   @IsBoolean()

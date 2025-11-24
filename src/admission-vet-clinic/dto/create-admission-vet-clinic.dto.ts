@@ -4,24 +4,24 @@ import { Type } from 'class-transformer';
 
 export class CreateAdmissionVetClinicDto {
     @IsNumber()
-    clinicId: number;
+    clinicId!: number;
 
     @IsString()
-    procedure: string; // "осмотр", "стерилизация", "УЗИ"
+    procedure!: string; // "осмотр", "стерилизация", "УЗИ"
 
     @IsString()
     @IsOptional()
     description?: string;
 
     @IsString()
-    diagnosis: string;
+    diagnosis!: string;
 
     @IsString()
-    recomendation: string;
+    recomendation!: string;
 
     @Type(() => Date)
     @IsDate()
-    visitDate: Date;
+    visitDate!: Date;
 
     @Type(() => Date)
     @IsDate()
@@ -37,7 +37,7 @@ export class CreateAdmissionVetClinicDto {
     medications?: string; // можно как JSON или строку
 
     @IsDecimal()
-    cost: number;
+    cost!: number;
 
     @IsArray()
     @IsString({ each: true })

@@ -3,22 +3,22 @@ import { IsString, IsNumber, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateServiceDto {
     @IsString()
-    name: string; // "Стерилизация", "УЗИ брюшной полости"
+    name!: string; // "Стерилизация", "УЗИ брюшной полости"
 
     @IsString()
-    description: string; // подробное описание
+    description!: string; // подробное описание
 
     @IsString()
-    recomendation: string; // рекомендации после процедуры
+    recomendation!: string; // рекомендации после процедуры
 
     @IsNumber()
-    price: number; // в рублях/тенге/USD
+    price!: number; // в рублях/тенге/USD
 
     @IsNumber()
-    duration: number; // в минутах
+    duration!: number; // в минутах
 
     @IsString()
-    category: string; // "хирургия", "лаборатория", "профилактика"
+    category!: string; // "хирургия", "лаборатория", "профилактика"
 
     @IsBoolean()
     @IsOptional()

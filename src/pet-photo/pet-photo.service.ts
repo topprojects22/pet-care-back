@@ -74,7 +74,7 @@ export class PetPhotoService {
       where: { id: photo.petId },
       select: { userId: true },
     });
-    if (pet.userId !== userId) throw new ForbiddenException("Not your pet");
+    if (!pet || pet.userId !== userId) throw new ForbiddenException("Not your pet");
 
     // Если устанавливается isPrimary = true — снимаем с других
     if (dto.isPrimary) {
@@ -102,7 +102,7 @@ export class PetPhotoService {
       where: { id: photo.petId },
       select: { userId: true },
     });
-    if (pet.userId !== userId) throw new ForbiddenException("Not your pet");
+    if (!pet || pet.userId !== userId) throw new ForbiddenException("Not your pet");
 
     // Если удаляется главное фото — сбрасываем avatarPath на дефолт
     if (photo.isPrimary) {
@@ -121,7 +121,7 @@ export class PetPhotoService {
       where: { id: photo.petId },
       select: { userId: true },
     });
-    if (pet.userId !== userId) throw new ForbiddenException("Not your pet");
+    if (!pet || pet.userId !== userId) throw new ForbiddenException("Not your pet");
 
     // Снимаем isPrimary с других
     await this.prisma.petPhoto.updateMany({

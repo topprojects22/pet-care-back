@@ -16,8 +16,9 @@ export function MeasurePerformance(label?: string) {
     descriptor: PropertyDescriptor,
   ) {
     const originalMethod = descriptor.value;
-    const logger = new Logger(target.constructor.name);
-    const methodLabel = label || `${target.constructor.name}.${propertyKey}`;
+    const targetName = (target as { constructor?: { name?: string } }).constructor?.name || 'Unknown';
+    const logger = new Logger(targetName);
+    const methodLabel = label || `${targetName}.${propertyKey}`;
 
     descriptor.value = async function (...args: unknown[]) {
       const start = performance.now();

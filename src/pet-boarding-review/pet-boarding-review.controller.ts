@@ -5,13 +5,13 @@ import {
     Post,
     Body,
     Param,
-    UseGuards,
-    Req,
     Query,
 } from '@nestjs/common';
 import { PetBoardingReviewService } from './pet-boarding-review.service';
 import { CreatePetBoardingReviewDto } from './dto/create-pet-boarding-review.dto';
 import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
 
 @Controller('pet-boarding/bookings/:bookingId/review')
 export class PetBoardingReviewController {
@@ -22,9 +22,9 @@ export class PetBoardingReviewController {
     create(
         @Param('bookingId') bookingId: string,
         @Body() dto: CreatePetBoardingReviewDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.reviewService.createReview(req.user.id, +bookingId, dto);
+        return this.reviewService.createReview(user.id, +bookingId, dto);
     }
 
     @Get()

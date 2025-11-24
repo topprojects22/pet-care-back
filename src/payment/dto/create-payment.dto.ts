@@ -4,10 +4,10 @@ import { PaymentMethod } from '@prisma/client';
 
 export class CreatePaymentDto {
     @IsNumber()
-    amount: number; // сумма в минимальных единицах (копейки/центы) или в валюте — по соглашению
+    amount!: number; // сумма в минимальных единицах (копейки/центы) или в валюте — по соглашению
 
     @IsEnum(PaymentMethod)
-    method: PaymentMethod; // CARD, CASH, ONLINE и т.д.
+    method!: PaymentMethod; // CARD, CASH, ONLINE и т.д.
 
     @IsNumber()
     @IsOptional()

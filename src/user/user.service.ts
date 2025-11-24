@@ -42,7 +42,7 @@ export class UserService {
       where: { id },
       select: { preferences: true },
     });
-    return user.preferences;
+    return user?.preferences || null;
   }
 
   // Обновление настроек пользователя
@@ -99,7 +99,7 @@ export class UserService {
       where: { id: userId },
       select: { preferredClinics: { where: { id: clinicId } } },
     });
-    if (user.preferredClinics.length === 0) {
+    if (!user || user.preferredClinics.length === 0) {
       return this.addFavoriteClinic(userId, clinicId);
     }
     return this.removeFavoriteClinic(userId, clinicId);

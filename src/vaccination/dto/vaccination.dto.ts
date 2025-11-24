@@ -10,15 +10,15 @@ import {
 export class CreateVaccinationDto {
   @IsNumber()
   @IsNotEmpty()
-  petId: number;
+  petId!: number;
 
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsDate()
   @IsNotEmpty()
-  date: Date;
+  date!: Date;
 
   @IsOptional()
   @IsDate()

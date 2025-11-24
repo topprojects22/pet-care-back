@@ -222,7 +222,7 @@ export class ShelterService {
                         userName: `${user?.name || ''} ${user?.lastName || ''}`.trim(),
                         userPhone: user?.phone || 'не указан',
                         userEmail: user?.email || 'не указан',
-                        message: dto.message || 'Сообщение не указано',
+                        message: dto.adoptionReason || 'Сообщение не указано',
                         adoptionRequestId: adoptionRequest.id,
                     },
                 });
@@ -237,9 +237,9 @@ export class ShelterService {
             await this.prisma.notification.create({
                 data: {
                     userId: userId,
-                    title: 'Заявка на усыновление отправлена',
+                    name: 'Заявка на усыновление отправлена',
                     description: `Ваша заявка на усыновление животного из приюта "${shelter?.name || 'Неизвестный приют'}" успешно отправлена.`,
-                    type: 'ADOPTION_REQUEST',
+                    type: 'HIGH',
                     isCompleted: false,
                     isConfirmed: false,
                 },

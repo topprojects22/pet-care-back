@@ -5,7 +5,7 @@ export class CreatePetBoardingReviewDto {
     @IsInt()
     @Min(1)
     @Max(5)
-    rating: number; // 1–5
+    rating!: number; // 1–5
 
     @IsString()
     @IsOptional()

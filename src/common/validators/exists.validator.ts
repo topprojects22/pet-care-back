@@ -34,7 +34,7 @@ export function Exists(
           if (!value) return false;
 
           const [modelName, fieldName] = args.constraints;
-          const prismaService = args.object['prisma'] as PrismaService;
+          const prismaService = (args.object as { prisma?: PrismaService }).prisma;
 
           if (!prismaService) {
             return false;

@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 
 export class CreateGroomingRecordDto {
     @IsString()
-    serviceType: string; // "haircut", "bath", "ear_cleaning", "nail_trim"
+    serviceType!: string; // "haircut", "bath", "ear_cleaning", "nail_trim"
 
     @IsString()
     @IsOptional()
@@ -12,7 +12,7 @@ export class CreateGroomingRecordDto {
 
     @Type(() => Date)
     @IsDate()
-    date: Date; // когда была/будет процедура
+    date!: Date; // когда была/будет процедура
 
     @Type(() => Date)
     @IsDate()

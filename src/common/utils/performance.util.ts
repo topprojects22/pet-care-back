@@ -50,7 +50,8 @@ export function MeasureTime(label?: string) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {
-      const methodLabel = label || `${target.constructor.name}.${propertyKey}`;
+      const targetName = (target as { constructor?: { name?: string } }).constructor?.name || 'Unknown';
+      const methodLabel = label || `${targetName}.${propertyKey}`;
       return measureTime(() => originalMethod.apply(this, args), methodLabel);
     };
 

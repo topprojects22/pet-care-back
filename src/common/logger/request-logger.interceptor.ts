@@ -19,7 +19,7 @@ export class RequestLoggerInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<Request>();
     const { method, url, ip, headers } = request;
-    const requestId = request['requestId'] || 'unknown';
+    const requestId = (request as Request & { requestId?: string }).requestId || 'unknown';
     const userAgent = headers['user-agent'] || 'unknown';
 
     const startTime = Date.now();

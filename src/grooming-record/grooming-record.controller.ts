@@ -7,14 +7,14 @@ import {
     Param,
     Patch,
     Delete,
-    UseGuards,
-    Req,
     Query,
 } from '@nestjs/common';
 import { GroomingRecordService } from './grooming-record.service';
 import { CreateGroomingRecordDto } from './dto/create-grooming-record.dto';
 import { UpdateGroomingRecordDto } from './dto/update-grooming-record.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
 
 @Controller('pets/:petId/grooming')
 export class GroomingRecordController {
@@ -25,9 +25,9 @@ export class GroomingRecordController {
     create(
         @Param('petId') petId: string,
         @Body() dto: CreateGroomingRecordDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.groomingService.createRecord(req.user.id, +petId, dto);
+        return this.groomingService.createRecord(user.id, +petId, dto);
     }
 
     @Get()
@@ -48,14 +48,14 @@ export class GroomingRecordController {
     update(
         @Param('id') id: string,
         @Body() dto: UpdateGroomingRecordDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.groomingService.updateRecord(req.user.id, +id, dto);
+        return this.groomingService.updateRecord(user.id, +id, dto);
     }
 
     @Delete(':id')
     @Auth()
-    remove(@Param('id') id: string, @Req() req) {
-        return this.groomingService.removeRecord(req.user.id, +id);
+    remove(@Param('id') id: string, @CurrentUser() user: User) {
+        return this.groomingService.removeRecord(user.id, +id);
     }
 }

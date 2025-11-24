@@ -4,15 +4,15 @@ import { Type } from 'class-transformer';
 
 export class CreateBookingDto {
     @IsNumber()
-    petId: number;
+    petId!: number;
 
     @Type(() => Date)
     @IsDate()
-    startDate: Date;
+    startDate!: Date;
 
     @Type(() => Date)
     @IsDate()
-    endDate: Date;
+    endDate!: Date;
 
     @IsString()
     @IsOptional()

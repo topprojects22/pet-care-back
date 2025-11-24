@@ -10,23 +10,23 @@ import {
 export class CreateMedicationDto {
   @IsNumber()
   @IsNotEmpty()
-  petId: number;
+  petId!: number;
 
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
-  dosage: string;
+  dosage!: string;
 
   @IsString()
   @IsNotEmpty()
-  frequency: string;
+  frequency!: string;
 
   @IsDate()
   @IsNotEmpty()
-  startDate: Date;
+  startDate!: Date;
 
   @IsOptional()
   @IsDate()

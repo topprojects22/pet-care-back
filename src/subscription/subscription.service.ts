@@ -89,7 +89,7 @@ export class SubscriptionService {
         productId: transactionInfo.productId,
         message: this.getStatusMessage(status),
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error validating receipt: ${error.message}`, error.stack);
       throw new BadRequestException(`Failed to validate receipt: ${error.message}`);
     }
@@ -119,7 +119,7 @@ export class SubscriptionService {
       ) as AppleJWSPayload;
 
       return payload;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error parsing JWS: ${error.message}`);
       return null;
     }
@@ -164,7 +164,7 @@ export class SubscriptionService {
       let jwt: any;
       try {
         jwt = require('jsonwebtoken');
-      } catch (error) {
+      } catch (error: any) {
         this.logger.warn(
           'jsonwebtoken package not found. Install it for full Apple validation: npm install jsonwebtoken @types/jsonwebtoken',
         );
@@ -208,7 +208,7 @@ export class SubscriptionService {
         isValid,
         message: isValid ? 'Transaction verified with Apple' : 'Transaction verification failed',
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error validating with Apple: ${error.message}`);
       // In case of network errors, we can still validate locally
       // but in production, you might want to fail here
@@ -241,7 +241,7 @@ export class SubscriptionService {
       // Assume it's base64 encoded
       try {
         privateKey = Buffer.from(privateKey, 'base64').toString('utf-8');
-      } catch (error) {
+      } catch (error: any) {
         // If decoding fails, use as-is (might already be in PEM format)
         this.logger.debug('Private key appears to be in PEM format already');
       }

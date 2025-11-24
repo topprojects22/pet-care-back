@@ -4,28 +4,28 @@ import { PetGender } from '@prisma/client';
 
 export class CreateShelterAnimalDto {
     @IsString()
-    name: string;
+    name!: string;
 
     @IsNumber()
-    animalTypeId: number;
+    animalTypeId!: number;
 
     @IsNumber()
     @IsOptional()
     breedId?: number;
 
     @IsEnum(PetGender)
-    gender: PetGender;
+    gender!: PetGender;
 
     @IsNumber()
     @IsOptional()
     ageEstimate?: number; // возраст в месяцах
 
     @IsString()
-    description: string;
+    description!: string;
 
     @IsArray()
     @IsString({ each: true })
-    photos: string[]; // обязательные фото
+    photos!: string[]; // обязательные фото
 
     @IsString()
     @IsOptional()

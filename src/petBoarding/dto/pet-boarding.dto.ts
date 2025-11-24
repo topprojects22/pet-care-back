@@ -12,23 +12,23 @@ import {
 export class CreateBoardingBookingDto {
   @IsNumber()
   @IsNotEmpty()
-  petId: number;
+  petId!: number;
 
   @IsNumber()
   @IsNotEmpty()
-  userId: number;
+  userId!: number;
 
   @IsNumber()
   @IsNotEmpty()
-  boardingId: number;
+  boardingId!: number;
 
   @IsDate()
   @IsNotEmpty()
-  startDate: Date;
+  startDate!: Date;
 
   @IsDate()
   @IsNotEmpty()
-  endDate: Date;
+  endDate!: Date;
 
   @IsOptional()
   @IsString()

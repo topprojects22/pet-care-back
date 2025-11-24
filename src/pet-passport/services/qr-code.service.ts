@@ -33,7 +33,8 @@ export class QrCodeService {
       
       return qrCodeBuffer;
     } catch (error) {
-      throw new Error(`Failed to generate QR code: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to generate QR code: ${errorMessage}`);
     }
   }
 
@@ -61,7 +62,8 @@ export class QrCodeService {
       
       return dataUrl;
     } catch (error) {
-      throw new Error(`Failed to generate QR code data URL: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to generate QR code data URL: ${errorMessage}`);
     }
   }
 }

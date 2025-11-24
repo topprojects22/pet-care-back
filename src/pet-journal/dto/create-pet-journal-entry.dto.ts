@@ -3,10 +3,10 @@ import { IsString, IsOptional, IsArray } from 'class-validator';
 
 export class CreatePetJournalEntryDto {
     @IsString()
-    title: string;
+    title!: string;
 
     @IsString()
-    content: string;
+    content!: string;
 
     @IsArray()
     @IsString({ each: true })

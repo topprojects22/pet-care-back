@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsOptional, IsObject, Min } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsObject, IsNotEmpty } from 'class-validator';
 
 export class CreatePaymentSessionDto {
   @IsNumber()
@@ -11,7 +11,7 @@ export class CreatePaymentSessionDto {
 
   @IsString()
   @IsNotEmpty()
-  serviceType: 'veterinary' | 'grooming' | 'boarding' | 'charity' | 'subscription';
+  serviceType!: 'veterinary' | 'grooming' | 'boarding' | 'charity' | 'subscription';
 
   @IsObject()
   @IsOptional()

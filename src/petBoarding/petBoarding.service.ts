@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { CreateBoardingBookingDto } from "./dto/pet-boarding.dto";
 
@@ -44,6 +44,10 @@ export class PetBoardingService {
     const boarding = await this.prisma.petBoarding.findUnique({
       where: { id: bookingData.boardingId },
     });
+
+    if (!boarding) {
+      throw new NotFoundException('Boarding not found');
+    }
 
     const totalPrice = boarding.pricePerDay * days;
 

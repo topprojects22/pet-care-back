@@ -14,31 +14,31 @@ import {
 export class CreateAppointmentDto {
   @IsNumber()
   @IsNotEmpty()
-  petId: number;
+  petId!: number;
 
   @IsNumber()
   @IsNotEmpty()
-  clinicId: number;
+  clinicId!: number;
 
   @IsString()
   @IsNotEmpty()
-  procedure: string;
+  procedure!: string;
 
   @IsString()
   @IsNotEmpty()
-  description: string;
+  description!: string;
 
   @IsString()
   @IsNotEmpty()
-  diagnosis: string;
+  diagnosis!: string;
 
   @IsString()
   @IsNotEmpty()
-  recomendation: string;
+  recomendation!: string;
 
   @IsDate()
   @IsNotEmpty()
-  visitDate: Date;
+  visitDate!: Date;
 
   @IsOptional()
   @IsDate()

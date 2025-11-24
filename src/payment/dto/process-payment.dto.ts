@@ -3,7 +3,7 @@ import { IsString, IsEnum, IsObject, IsOptional, IsBoolean } from 'class-validat
 export class ProcessPaymentDto {
   @IsString()
   @IsEnum(['card', 'apple_pay', 'google_pay', 'stripe'])
-  paymentMethod: 'card' | 'apple_pay' | 'google_pay' | 'stripe';
+  paymentMethod!: 'card' | 'apple_pay' | 'google_pay' | 'stripe';
 
   @IsObject()
   @IsOptional()

@@ -3,7 +3,7 @@ import { IsNumber, IsString, IsOptional, IsBoolean, Min } from 'class-validator'
 export class CreateDonationDto {
   @IsNumber()
   @Min(100, { message: 'Minimum donation amount is 100 RUB' })
-  amount: number;
+  amount!: number;
 
   @IsString()
   @IsOptional()

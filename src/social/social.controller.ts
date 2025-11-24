@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Query,
+  Param,
 } from '@nestjs/common';
 import { SocialService } from './social.service';
 import { Auth } from '../auth/decorators/auth.decorator';

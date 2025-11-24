@@ -17,7 +17,7 @@ export class PetBoardingService {
         return this.prisma.petBoarding.create({
         data: {
             ...dto,
-            email: dto.email.toLowerCase(),
+            email: dto.email?.toLowerCase() || '',
             user: { connect: { id: userId } }
         }, // Используем связь через connect, isActive: true },
         include: { user: { select: { id: true, name: true } } },
@@ -66,13 +66,9 @@ export class PetBoardingService {
             }
         }
 
-        if (acceptsCats !== undefined) {
-            where.acceptsCats = acceptsCats;
-        }
-
-        if (acceptsDogs !== undefined) {
-            where.acceptsDogs = acceptsDogs;
-        }
+        // Note: acceptsCats and acceptsDogs are not in the schema yet
+        // If needed, add them to the PetBoarding model in schema.prisma
+        // For now, we'll skip these filters
 
         // Оптимизированный запрос с select и пагинацией
         const [listings, total] = await Promise.all([
@@ -80,14 +76,12 @@ export class PetBoardingService {
                 where,
                 select: {
                     id: true,
-                    title: true,
+                    name: true,
                     description: true,
-                    city: true,
                     address: true,
                     pricePerDay: true,
-                    acceptsCats: true,
-                    acceptsDogs: true,
-                    maxPets: true,
+                    capacity: true,
+                    availableSpots: true,
                     photos: true,
                     createdAt: true,
                     user: { 

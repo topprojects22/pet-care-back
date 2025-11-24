@@ -14,33 +14,33 @@ export class ValidateSubscriptionResponseDto {
     description: 'Whether the receipt is valid',
     example: true,
   })
-  isValid: boolean;
+  isValid!: boolean;
 
   @ApiProperty({
     description: 'Current subscription status',
     enum: SubscriptionStatus,
     example: SubscriptionStatus.ACTIVE,
   })
-  subscriptionStatus: SubscriptionStatus;
+  subscriptionStatus!: SubscriptionStatus;
 
   @ApiProperty({
     description: 'Subscription expiration date in ISO 8601 format',
     example: '2025-12-31T23:59:59Z',
     nullable: true,
   })
-  expiresAt: string | null;
+  expiresAt!: string | null;
 
   @ApiProperty({
     description: 'Product ID of the subscription',
     example: 'pro_monthly',
     nullable: true,
   })
-  productId: string | null;
+  productId!: string | null;
 
   @ApiProperty({
     description: 'Human-readable message about the subscription status',
     example: 'Subscription is active',
   })
-  message: string;
+  message!: string;
 }
 

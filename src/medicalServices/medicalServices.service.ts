@@ -99,7 +99,7 @@ export class MedicalServicesService {
         nextVisitDate: appointmentData.nextVisitDate,
         doctorName: appointmentData.doctorName,
         medications: appointmentData.medications,
-        cost: appointmentData.cost,
+        cost: appointmentData.cost ?? 0,
         files: appointmentData.files,
         temperature: appointmentData.temperature,
         pulse: appointmentData.pulse,

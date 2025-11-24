@@ -37,8 +37,8 @@ export class AppleAuthService {
         throw new UnauthorizedException('Failed to fetch Apple public keys');
       }
       
-      const data = await response.json();
-      this.applePublicKeys = data.keys;
+      const data = await response.json() as { keys?: unknown[] };
+      this.applePublicKeys = data.keys || [];
       this.keysLastFetched = now;
       return this.applePublicKeys;
     } catch (error) {

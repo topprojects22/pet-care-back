@@ -1,0 +1,268 @@
+name: CD - Continuous Deployment
+
+on:
+  push:
+    branches:
+      - main      # Production
+      - develop   # Staging
+  workflow_dispatch:  # Ручной запуск
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip tests'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Определяем окружение на основе ветки
+  determine-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      should_deploy: ${{ steps.set-env.outputs.should_deploy }}
+    steps:
+      - name: Set environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "environment=development" >> $GITHUB_OUTPUT
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Тесты (если не пропущены)
+  test:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.skip_tests != 'true'
+    needs: determine-environment
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: petcare_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petcare_test
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petcare_test
+          JWT_SECRET: test-secret-key-minimum-32-characters-long
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/petcare_test
+          JWT_SECRET: test-secret-key-minimum-32-characters-long
+
+  # Сборка Docker образа
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, test]
+    if: needs.determine-environment.outputs.should_deploy == 'true' && (needs.test.result == 'success' || github.event.inputs.skip_tests == 'true')
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=${{ needs.determine-environment.outputs.environment }},enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=${{ needs.determine-environment.outputs.environment }}
+
+  # Деплой в Docker (для staging/development)
+  deploy-docker:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build-and-push]
+    if: |
+      needs.determine-environment.outputs.should_deploy == 'true' &&
+      (needs.determine-environment.outputs.environment == 'staging' || needs.determine-environment.outputs.environment == 'development')
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            set -e
+            cd ~/pet-care-back
+            
+            # Pull latest code
+            git fetch origin
+            git checkout ${{ github.ref_name }}
+            git pull origin ${{ github.ref_name }}
+            
+            # Pull latest Docker image
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.determine-environment.outputs.environment }}
+            
+            # Run deployment script
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh ${{ needs.determine-environment.outputs.environment }} ${{ needs.determine-environment.outputs.environment }}
+            
+            # Cleanup old images
+            docker image prune -f
+          EOF
+
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f https://${{ secrets.DEPLOY_HOST }}/api/health || exit 1
+
+  # Деплой в Kubernetes (для production)
+  deploy-kubernetes:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build-and-push]
+    if: |
+      needs.determine-environment.outputs.should_deploy == 'true' &&
+      needs.determine-environment.outputs.environment == 'production'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=./kubeconfig
+
+      - name: Update Kubernetes deployment
+        run: |
+          export KUBECONFIG=./kubeconfig
+          
+          # Update image in deployment
+          kubectl set image deployment/pet-care-backend \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production \
+            -n ${{ secrets.K8S_NAMESPACE || 'default' }}
+          
+          # Apply manifests
+          kubectl apply -f k8s/configmap.yaml -n ${{ secrets.K8S_NAMESPACE || 'default' }}
+          kubectl apply -f k8s/redis-deployment.yaml -n ${{ secrets.K8S_NAMESPACE || 'default' }}
+          kubectl apply -f k8s/deployment.yaml -n ${{ secrets.K8S_NAMESPACE || 'default' }}
+          kubectl apply -f k8s/hpa.yaml -n ${{ secrets.K8S_NAMESPACE || 'default' }}
+          
+          # Wait for rollout
+          kubectl rollout status deployment/pet-care-backend -n ${{ secrets.K8S_NAMESPACE || 'default' }} --timeout=5m
+
+      - name: Verify deployment
+        run: |
+          export KUBECONFIG=./kubeconfig
+          kubectl get pods -n ${{ secrets.K8S_NAMESPACE || 'default' }} -l app=pet-care-backend
+          kubectl get services -n ${{ secrets.K8S_NAMESPACE || 'default' }}
+
+  # Уведомления
+  notify:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, deploy-docker, deploy-kubernetes]
+    if: always()
+    
+    steps:
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "✅ Deployment to ${{ needs.determine-environment.outputs.environment }} completed successfully!"
+          # Здесь можно добавить уведомления в Slack, Telegram, Email и т.д.
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment to ${{ needs.determine-environment.outputs.environment }} failed!"
+          # Здесь можно добавить уведомления об ошибках
+

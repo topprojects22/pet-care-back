@@ -29,7 +29,16 @@ export class GoogleAuthService {
         throw new UnauthorizedException('Failed to validate Google token');
       }
 
-      const data = await response.json();
+      const data = await response.json() as {
+        sub?: string;
+        email?: string;
+        email_verified?: string | boolean;
+        aud?: string;
+        name?: string;
+        given_name?: string;
+        family_name?: string;
+        picture?: string;
+      };
 
       // Проверяем, что токен валиден
       if (!data.email || !data.email_verified) {
@@ -43,9 +52,9 @@ export class GoogleAuthService {
       }
 
       return {
-        id: data.sub,
-        email: data.email,
-        verified_email: data.email_verified === 'true',
+        id: data.sub || '',
+        email: data.email || '',
+        verified_email: data.email_verified === 'true' || data.email_verified === true,
         name: data.name || `${data.given_name || ''} ${data.family_name || ''}`.trim(),
         given_name: data.given_name,
         family_name: data.family_name,

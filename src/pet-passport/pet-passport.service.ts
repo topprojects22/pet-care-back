@@ -9,7 +9,7 @@ import { PrismaService } from '../prisma.service';
 import { CreatePetPassportDto } from './dto/create-pet-passport.dto';
 import { PassportPdfGeneratorService } from './passport-pdf-generator.service';
 import { UpdatePetPassportDto } from './dto/update-pet-passport.dto';
-import { QrCodeService } from './qr-code.service';
+import { QrCodeService } from './services/qr-code.service';
 
 @Injectable()
 export class PetPassportService {
@@ -83,7 +83,7 @@ export class PetPassportService {
             where: { id: petId },
             select: { userId: true },
         });
-        if (pet.userId !== userId) throw new ForbiddenException('Not your pet');
+        if (!pet || pet.userId !== userId) throw new ForbiddenException('Not your pet');
 
         return this.prisma.petPassport.update({
             where: { petId },
@@ -104,7 +104,7 @@ export class PetPassportService {
         if (!passport.chip) {
             throw new BadRequestException('Passport does not have a chip number');
         }
-        return this.qrCodeService.generateQrCode(petId, passport.chip);
+        return this.qrCodeService.generateQrCode(petId, String(passport.chip));
     }
 
     /**

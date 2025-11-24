@@ -4,13 +4,13 @@ import { NotificationType } from '@prisma/client';
 
 export class CreateNotificationDto {
     @IsString()
-    name: string;
+    name!: string;
 
     @IsString()
-    description: string;
+    description!: string;
 
     @IsEnum(NotificationType)
-    type: NotificationType;
+    type!: NotificationType;
 
     @IsDate()
     @IsOptional()
