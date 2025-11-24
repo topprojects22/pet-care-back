@@ -48,21 +48,68 @@ export class NotificationService {
     return this.findOne(notification.id);
   }
 
-  async findAllForUser(userId: number, isCompleted?: boolean, page = 1, limit = 20) {
+  async findAllForUser(
+    userId: number,
+    query: {
+      isCompleted?: boolean;
+      type?: NotificationType;
+      page?: number;
+      limit?: number;
+    },
+  ) {
+    const { isCompleted, type, page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { userId };
     if (isCompleted !== undefined) where.isCompleted = isCompleted;
+    if (type) where.type = type;
 
-    return this.prisma.notification.findMany({
-      where,
-      include: {
-        petOnNotification: { include: { pet: { select: { id: true, name: true } } } },
+    // Оптимизированный запрос с select и пагинацией
+    const [notifications, total] = await Promise.all([
+      this.prisma.notification.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          type: true,
+          isCompleted: true,
+          isConfirmed: true,
+          scheduledDate: true,
+          confirmationDate: true,
+          createdAt: true,
+          updatedAt: true,
+          petOnNotification: {
+            select: {
+              pet: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarPath: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.notification.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: notifications,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
       },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: limit,
-    });
+    };
   }
 
   async findOne(id: number) {

@@ -1,65 +1,42 @@
 /**
- * Утилиты для формирования стандартизированных ответов
+ * Утилиты для форматирования ответов API
  */
-
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  timestamp: string;
-}
-
-export interface PaginatedApiResponse<T = unknown> extends ApiResponse<T[]> {
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
 
 /**
- * Создает успешный ответ
+ * Создает стандартизированный успешный ответ
  */
-export function successResponse<T>(data: T, message?: string): ApiResponse<T> {
+export function createSuccessResponse<T>(data: T, message?: string) {
   return {
-    success: true,
     data,
     ...(message && { message }),
-    timestamp: new Date().toISOString(),
   };
 }
 
 /**
- * Создает пагинированный ответ
+ * Создает стандартизированный ответ с пагинацией
  */
-export function paginatedResponse<T>(
+export function createPaginatedResponse<T>(
   data: T[],
   page: number,
   limit: number,
   total: number,
-): PaginatedApiResponse<T> {
+) {
+  const totalPages = Math.ceil(total / limit);
   return {
-    success: true,
     data,
     meta: {
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages,
+      hasMore: page < totalPages,
     },
-    timestamp: new Date().toISOString(),
   };
 }
 
 /**
- * Создает ответ с сообщением (без данных)
+ * Форматирует имя пользователя (name + lastName)
  */
-export function messageResponse(message: string): ApiResponse {
-  return {
-    success: true,
-    message,
-    timestamp: new Date().toISOString(),
-  };
+export function formatUserName(name?: string | null, lastName?: string | null): string {
+  return `${name || ''} ${lastName || ''}`.trim() || 'User';
 }
-

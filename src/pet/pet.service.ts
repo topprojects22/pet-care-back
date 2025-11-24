@@ -1,54 +1,183 @@
-import { Injectable, Req } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreatePetDto, UpdatePetDto, CreatePetPassportDto } from './dto/pet.dto';
+import { PassportPdfService } from './services/passport-pdf.service';
+import { createPaginatedResponse } from '../common/utils/response.util';
 
 @Injectable()
 export class PetService {
   constructor(private prisma: PrismaService) {}
 
-  // Получение всех питомцев пользователя (для главного экрана)
-  async getUserPets(userId: number) {
-    return this.prisma.pet.findMany({
-      where: { userId },
-      include: {
-        animalType: true,
-        petPassport: true,
-        photos: {
-          where: { isPrimary: true },
-          take: 1
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+  // Получение всех питомцев пользователя (для главного экрана) с пагинацией и фильтрацией
+  async getUserPets(
+    userId: number,
+    page: number = 1,
+    limit: number = 20,
+    type?: string,
+    sort: string = 'createdAt',
+    order: 'asc' | 'desc' = 'desc'
+  ) {
+    const skip = (page - 1) * limit;
+
+    // Формируем условие WHERE
+    const where: any = { userId };
+    
+    // Фильтр по типу животного
+    if (type) {
+      where.animalType = {
+        name: {
+          contains: type,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    // Формируем сортировку
+    const orderBy: any = {};
+    if (sort === 'name') {
+      orderBy.name = order;
+    } else if (sort === 'birthDate') {
+      orderBy.birthDate = order;
+    } else {
+      orderBy.createdAt = order;
+    }
+
+    // Получаем данные с пагинацией (оптимизированный запрос с select)
+    const [pets, total] = await Promise.all([
+      this.prisma.pet.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          birthDate: true,
+          gender: true,
+          weight: true,
+          color: true,
+          avatarPath: true,
+          createdAt: true,
+          animalType: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          petPassport: {
+            select: {
+              id: true,
+              chip: true,
+            },
+          },
+          photos: {
+            where: { isPrimary: true },
+            take: 1,
+            select: {
+              id: true,
+              url: true,
+              isPrimary: true,
+            },
+          },
+        },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      this.prisma.pet.count({ where }),
+    ]);
+
+    return createPaginatedResponse(pets, page, limit, total);
   }
 
   // Получение детальной информации о питомце (для экрана карточки)
+  // Оптимизировано с использованием select для уменьшения объема данных
   async getPetWithDetails(id: number) {
     return this.prisma.pet.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        birthDate: true,
+        gender: true,
+        weight: true,
+        color: true,
+        avatarPath: true,
+        isSterilized: true,
+        createdAt: true,
+        updatedAt: true,
         animalType: {
-          include: {
-            animalBreed: true
-          }
+          select: {
+            id: true,
+            name: true,
+            animalBreed: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
         },
         petPassport: {
-          include: {
-            breed: true
-          }
+          select: {
+            id: true,
+            chip: true,
+            chipInstallDate: true,
+            tattooNumber: true,
+            specialMarks: true,
+            issuingOrganization: true,
+            registrationNumber: true,
+            qrCode: true,
+            breed: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
         },
-        petCard: true,
+        petCard: {
+          select: {
+            id: true,
+            cardNumber: true,
+            issueDate: true,
+            expiryDate: true,
+          },
+        },
         medications: {
-          orderBy: { startDate: 'desc' }
+          select: {
+            id: true,
+            name: true,
+            dosage: true,
+            frequency: true,
+            startDate: true,
+            endDate: true,
+            notes: true,
+          },
+          orderBy: { startDate: 'desc' },
         },
         vaccinations: {
-          include: {
-            clinic: true
+          select: {
+            id: true,
+            name: true,
+            date: true,
+            nextDate: true,
+            description: true,
+            clinic: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+              },
+            },
           },
-          orderBy: { date: 'desc' }
+          orderBy: { date: 'desc' },
         },
         photos: {
-          orderBy: { isPrimary: 'desc' }
+          select: {
+            id: true,
+            url: true,
+            isPrimary: true,
+            createdAt: true,
+          },
+          orderBy: { isPrimary: 'desc' },
         },
         healthMetrics: {
           orderBy: { measuredAt: 'desc' },

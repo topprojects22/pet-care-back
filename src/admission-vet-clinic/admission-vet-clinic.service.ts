@@ -75,19 +75,99 @@ export class AdmissionVetClinicService {
         return admission;
     }
 
-    async findAllForPet(petId: number) {
-        return this.prisma.admissionVetClinic.findMany({
-            where: { petId },
-            orderBy: { visitDate: 'desc' },
-            include: {
+    async findAllForPet(
+        petId: number,
+        query: {
+            page?: number;
+            limit?: number;
+            clinicId?: number;
+            startDate?: string;
+            endDate?: string;
+            fromDate?: string;
+            toDate?: string;
+            sortBy?: string;
+            sortOrder?: string;
+        },
+    ) {
+        const { page = 1, limit = 20, clinicId, startDate, endDate, fromDate, toDate, sortBy, sortOrder } = query;
+        const skip = (page - 1) * limit;
+
+        // Используем fromDate/toDate или startDate/endDate
+        const start = startDate || fromDate;
+        const end = endDate || toDate;
+
+        // Формируем условие WHERE
+        const where: any = { petId };
+        
+        if (clinicId) {
+            where.clinicId = clinicId;
+        }
+
+        if (start || end) {
+            where.visitDate = {};
+            if (start) {
+                where.visitDate.gte = new Date(start);
+            }
+            if (end) {
+                where.visitDate.lte = new Date(end);
+            }
+        }
+
+        // Определяем сортировку
+        const orderBy: any = {};
+        if (sortBy) {
+            orderBy[sortBy] = sortOrder || 'desc';
+        } else {
+            orderBy.visitDate = 'desc';
+        }
+
+        // Оптимизированный запрос с select
+        const [visits, total] = await Promise.all([
+            this.prisma.admissionVetClinic.findMany({
+                where,
+                select: {
+                    id: true,
+                    procedure: true,
+                    diagnosis: true,
+                    recomendation: true,
+                    visitDate: true,
+                    nextVisitDate: true,
+                    doctorName: true,
+                    cost: true,
+                    status: true,
+                    createdAt: true,
+                    clinic: { select: { id: true, name: true, address: true } },
+                    pet: { select: { id: true, name: true } },
+                },
+                orderBy,
+                skip,
+                take: limit,
+            }),
+            this.prisma.admissionVetClinic.count({ where }),
+        ]);
+
+        return createPaginatedResponse(visits, page, limit, total);
+    }
+
+    async findOne(id: number) {
+        const admission = await this.prisma.admissionVetClinic.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                procedure: true,
+                diagnosis: true,
+                recomendation: true,
+                visitDate: true,
+                nextVisitDate: true,
+                doctorName: true,
+                cost: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true,
                 clinic: { select: { id: true, name: true, address: true } },
                 pet: { select: { id: true, name: true } },
             },
         });
-    }
-
-    async findOne(id: number) {
-        const admission = await this.prisma.admissionVetClinic.findUnique({ where: { id } });
         if (!admission) throw new NotFoundException('Admission record not found');
         return admission;
     }
@@ -116,4 +196,5 @@ export class AdmissionVetClinicService {
 
         return this.prisma.admissionVetClinic.delete({ where: { id } });
     }
+}
 }

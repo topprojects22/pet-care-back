@@ -6,13 +6,14 @@ import {
   Body,
   Param,
   Patch,
-  UseGuards,
-  Req,
   Query,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { GetNotificationsQueryDto } from './dto/get-notifications-query.dto';
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('notifications')
 export class NotificationController {
@@ -20,43 +21,39 @@ export class NotificationController {
 
   @Post()
   @Auth()
-  create(@Body() dto: CreateNotificationDto, @Req() req) {
-    return this.notificationService.createNotification(req.user.id, dto);
+  create(@Body() dto: CreateNotificationDto, @CurrentUser() user: User) {
+    return this.notificationService.createNotification(user.id, dto);
   }
 
   @Get()
   @Auth()
   findAll(
-      @Req() req,
-      @Query('completed') completed?: string,
-      @Query('page') page?: string,
-      @Query('limit') limit?: string,
+      @CurrentUser() user: User,
+      @Query() query: GetNotificationsQueryDto,
   ) {
-    return this.notificationService.findAllForUser(
-        req.user.id,
-        completed === 'true',
-        page ? +page : undefined,
-        limit ? +limit : undefined,
-    );
+    return this.notificationService.findAllForUser(user.id, {
+      isCompleted: query.completed,
+      type: query.type,
+      page: query.page,
+      limit: query.limit,
+    });
   }
 
   @Get(':id')
   @Auth()
-  findOne(@Param('id') id: string, @Req() req) {
-    const notification = this.notificationService.findOne(+id);
-    // Проверка прав — внутри сервиса
-    return notification;
+  findOne(@Param('id') id: string) {
+    return this.notificationService.findOne(+id);
   }
 
   @Patch(':id/complete')
   @Auth()
-  complete(@Param('id') id: string, @Req() req) {
-    return this.notificationService.markAsCompleted(req.user.id, +id);
+  complete(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.notificationService.markAsCompleted(user.id, +id);
   }
 
   @Patch(':id/confirm')
   @Auth()
-  confirm(@Param('id') id: string, @Req() req) {
-    return this.notificationService.confirmNotification(req.user.id, +id);
+  confirm(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.notificationService.confirmNotification(user.id, +id);
   }
 }

@@ -6,14 +6,17 @@ import {
     Body,
     Param,
     Patch,
-    UseGuards,
-    Req,
     Query,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreatePaymentSessionDto } from './dto/create-payment-session.dto';
+import { ProcessPaymentDto } from './dto/process-payment.dto';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { GetPaymentsQueryDto } from './dto/get-payments-query.dto';
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('payments')
 export class PaymentController {
@@ -21,17 +24,17 @@ export class PaymentController {
 
     @Post()
     @Auth()
-    create(@Body() dto: CreatePaymentDto, @Req() req) {
-        return this.paymentService.createPayment(req.user.id, dto);
+    create(@Body() dto: CreatePaymentDto, @CurrentUser() user: User) {
+        return this.paymentService.createPayment(user.id, dto);
     }
 
     @Get()
     @Auth()
     findAll(
-        @Req() req,
+        @CurrentUser() user: User,
         @Query('status') status?: string,
     ) {
-        return this.paymentService.findAllForUser(req.user.id, status);
+        return this.paymentService.findAllForUser(user.id, status);
     }
 
     @Get(':id')
@@ -45,5 +48,33 @@ export class PaymentController {
     @Auth()// ← в реальности: Guard для админа или API-ключа
     updateStatus(@Param('id') id: string, @Body() dto: UpdatePaymentStatusDto) {
         return this.paymentService.updatePaymentStatus(+id, dto);
+    }
+
+    @Post('session')
+    @Auth()
+    createSession(@Body() dto: CreatePaymentSessionDto, @CurrentUser() user: User) {
+        return this.paymentService.createPaymentSession(user.id, dto);
+    }
+
+    @Post('session/:sessionId/process')
+    @Auth()
+    processPayment(
+        @Param('sessionId') sessionId: string,
+        @Body() dto: ProcessPaymentDto,
+        @CurrentUser() user: User,
+    ) {
+        return this.paymentService.processPayment(sessionId, user.id, dto);
+    }
+
+    @Get('transactions')
+    @Auth()
+    getTransactions(
+        @CurrentUser() user: User,
+        @Query() query: GetPaymentsQueryDto,
+    ) {
+        return this.paymentService.getTransactions(
+            user.id,
+            query,
+        );
     }
 }

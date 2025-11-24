@@ -74,5 +74,16 @@ export const validationSchema = Joi.object({
   APP_STORE_PRIVATE_KEY: Joi.string()
     .optional()
     .description('Apple App Store Private Key (base64 encoded)'),
+
+  // Google OAuth (опционально)
+  GOOGLE_CLIENT_ID: Joi.string().optional().description('Google OAuth Client ID'),
+
+  // Apple OAuth (опционально)
+  APPLE_CLIENT_ID: Joi.string().optional().description('Apple OAuth Client ID'),
+  APPLE_TEAM_ID: Joi.string().optional().description('Apple OAuth Team ID'),
+
+  // Database Connection Pooling
+  DATABASE_CONNECTION_LIMIT: Joi.number().default(10).description('Database connection pool limit'),
+  DATABASE_POOL_TIMEOUT: Joi.number().default(20).description('Database connection pool timeout in seconds'),
 });
 

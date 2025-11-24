@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreatePetBoardingDto } from './dto/create-pet-boarding.dto';
+import { createPaginatedResponse } from '../common/utils/response.util';
 
 @Injectable()
 export class PetBoardingService {
@@ -23,20 +24,96 @@ export class PetBoardingService {
     });
     }
 
-    async findAllActive(query: { page?: number; limit?: number; userId?: number }) {
-        const { page = 1, limit = 20, userId } = query;
+    async findAllActive(query: { 
+        page?: number; 
+        limit?: number; 
+        userId?: number;
+        city?: string;
+        maxPrice?: number;
+        minPrice?: number;
+        acceptsCats?: boolean;
+        acceptsDogs?: boolean;
+    }) {
+        const { 
+            page = 1, 
+            limit = 20, 
+            userId,
+            city,
+            maxPrice,
+            minPrice,
+            acceptsCats,
+            acceptsDogs,
+        } = query;
         const skip = (page - 1) * limit;
 
-        return this.prisma.petBoarding.findMany({
-            where: { isActive: true, ...(userId && { userId }) },
-            include: {
-                user: { select: { id: true, name: true, avatarPath: true } },
-                _count: { select: { bookings: true, reviews: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-            skip,
-            take: limit,
-        });
+        const where: any = { isActive: true };
+        
+        if (userId) {
+            where.userId = userId;
+        }
+
+        if (city) {
+            where.city = { contains: city, mode: 'insensitive' };
+        }
+
+        if (minPrice !== undefined || maxPrice !== undefined) {
+            where.pricePerDay = {};
+            if (minPrice !== undefined) {
+                where.pricePerDay.gte = minPrice;
+            }
+            if (maxPrice !== undefined) {
+                where.pricePerDay.lte = maxPrice;
+            }
+        }
+
+        if (acceptsCats !== undefined) {
+            where.acceptsCats = acceptsCats;
+        }
+
+        if (acceptsDogs !== undefined) {
+            where.acceptsDogs = acceptsDogs;
+        }
+
+        // Оптимизированный запрос с select и пагинацией
+        const [listings, total] = await Promise.all([
+            this.prisma.petBoarding.findMany({
+                where,
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    city: true,
+                    address: true,
+                    pricePerDay: true,
+                    acceptsCats: true,
+                    acceptsDogs: true,
+                    maxPets: true,
+                    photos: true,
+                    createdAt: true,
+                    user: { 
+                        select: { 
+                            id: true, 
+                            name: true, 
+                            lastName: true,
+                            avatarPath: true,
+                            phone: true,
+                        } 
+                    },
+                    _count: { 
+                        select: { 
+                            bookings: true, 
+                            reviews: true 
+                        } 
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            this.prisma.petBoarding.count({ where }),
+        ]);
+
+        return createPaginatedResponse(listings, page, limit, total);
     }
 
     async findOne(id: number) {
@@ -53,7 +130,7 @@ export class PetBoardingService {
         return listing;
     }
 
-    async updateListing(userId: number, id: number, dto: any) {
+    async updateListing(userId: number, id: number, dto: Partial<CreatePetBoardingDto>) {
         const listing = await this.findOne(id);
         if (listing.userId !== userId) throw new ForbiddenException('Not your listing');
         return this.prisma.petBoarding.update({ where: { id },  data:dto });

@@ -92,23 +92,4 @@ export class CreateAppointmentDto {
   complications?: string;
 }
 
-// clinic-search.dto.ts
-export class ClinicSearchDto {
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  specialty?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  emergencyService?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  @Max(5)
-  minRating?: number;
-}
+// ClinicSearchDto moved to separate file: clinic-search.dto.ts

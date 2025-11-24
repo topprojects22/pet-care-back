@@ -1,4 +1,4 @@
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
 import { IsStrongPassword } from '../../common/validators/password.validator';
 
 export class LoginAuthDto {
@@ -23,4 +23,54 @@ export class RegisterAuthDto {
 export class AccessTokenAuthDto {
   @IsString()
   refreshToken: string;
+}
+
+export class ForgotPasswordDto {
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @IsString()
+  @MinLength(8)
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)/, {
+    message: 'Password must contain at least one letter and one number'
+  })
+  newPassword: string;
+
+  @IsString()
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)/)
+  confirmPassword: string;
+}
+
+export class GoogleAuthDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @IsString()
+  @IsOptional()
+  deviceId?: string;
+}
+
+export class AppleAuthDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @IsString()
+  @IsOptional()
+  identityToken?: string;
+
+  @IsString()
+  @IsOptional()
+  authorizationCode?: string;
+
+  @IsString()
+  @IsOptional()
+  deviceId?: string;
 }

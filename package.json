@@ -76,6 +76,7 @@
     "ioredis": "^5.8.2",
     "isomorphic-dompurify": "^2.32.0",
     "joi": "^18.0.1",
+    "jose": "^6.1.2",
     "nest-winston": "^1.10.2",
     "nodemailer": "6.9.2",
     "passport": "0.6.0",

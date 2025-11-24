@@ -7,14 +7,14 @@ import {
     Param,
     Patch,
     Delete,
-    UseGuards,
-    Req,
     Query,
 } from '@nestjs/common';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ServiceService } from './service.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('clinics/:clinicId/services')
 export class ServiceController {
@@ -25,9 +25,9 @@ export class ServiceController {
     create(
         @Param('clinicId') clinicId: string,
         @Body() dto: CreateServiceDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.serviceService.createService(+clinicId, req.user.id, dto);
+        return this.serviceService.createService(+clinicId, user.id, dto);
     }
 
     @Get()
@@ -49,9 +49,9 @@ export class ServiceController {
         @Param('clinicId') clinicId: string,
         @Param('id') id: string,
         @Body() dto: UpdateServiceDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.serviceService.updateService(+clinicId, req.user.id, +id, dto);
+        return this.serviceService.updateService(+clinicId, user.id, +id, dto);
     }
 
     @Delete(':id')
@@ -59,8 +59,8 @@ export class ServiceController {
     remove(
         @Param('clinicId') clinicId: string,
         @Param('id') id: string,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.serviceService.removeService(+clinicId, req.user.id, +id);
+        return this.serviceService.removeService(+clinicId, user.id, +id);
     }
 }

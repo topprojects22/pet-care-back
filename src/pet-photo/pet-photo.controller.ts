@@ -8,7 +8,6 @@ import {
   Patch,
   Delete,
   UseGuards,
-  Req,
   UseInterceptors,
   UploadedFile,
   UploadedFiles,
@@ -21,6 +20,11 @@ import { UpdatePetPhotoDto } from "./dto/update-pet-photo.dto";
 import { Auth } from "../auth/decorators/auth.decorator";
 import { FileUploadService } from "../common/services/file-upload.service";
 import { FileStorageService } from "../common/services/file-storage.service";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
+import { Resource } from "../common/decorators/resource.decorator";
+import { OwnershipGuard } from "../common/guards/ownership.guard";
+import { UseGuards } from "@nestjs/common";
 
 // Конфигурация для загрузки фото питомцев
 const PET_PHOTO_UPLOAD_CONFIG = {
@@ -47,19 +51,21 @@ export class PetPhotoController {
   // 🆕 Загрузка одного фото (обратная совместимость)
   @Post("upload")
   @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   // @ts-ignore - декораторы выполняются до инициализации класса
   @UseInterceptors(FileInterceptor("photo", this.multerOptions))
   async upload(
     @UploadedFile() file: Express.Multer.File,
     @Param("petId") petId: string,
-    @Req() req,
+    @CurrentUser() user: User,
     @Body() dto?: CreatePetPhotoDto
   ) {
     if (!file) {
       throw new BadRequestException("Photo file is required");
     }
 
-    const userId = req.user.id;
+    const userId = user.id;
 
     // Обрабатываем файл через универсальный сервис
     const fileInfo = this.fileUploadService.processUploadedFile(file, {
@@ -79,18 +85,20 @@ export class PetPhotoController {
   // 🆕 Загрузка нескольких фото
   @Post("upload-multiple")
   @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   // @ts-ignore - декораторы выполняются до инициализации класса
   @UseInterceptors(FilesInterceptor("photos", 10, this.multerOptions))
   async uploadMultiple(
     @UploadedFiles() files: Express.Multer.File[],
     @Param("petId") petId: string,
-    @Req() req
+    @CurrentUser() user: User
   ) {
     if (!files || files.length === 0) {
       throw new BadRequestException("At least one photo file is required");
     }
 
-    const userId = req.user.id;
+    const userId = user.id;
 
     // Обрабатываем все файлы
     const uploadedFiles = this.fileUploadService.processUploadedFiles(files, {
@@ -133,30 +141,40 @@ export class PetPhotoController {
 //   }
 
   @Get()
+  @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   findAll(@Param("petId") petId: string) {
     return this.photoService.findAllForPet(+petId);
   }
 
   @Get(":id")
+  @Auth()
   findOne(@Param("id") id: string) {
     return this.photoService.findOne(+id);
   }
 
   @Patch(":id")
   @Auth()
-  update(@Param("id") id: string, @Body() dto: UpdatePetPhotoDto, @Req() req) {
-    return this.photoService.updatePhoto(req.user.id, +id, dto);
+  @Resource("petPhoto")
+  @UseGuards(OwnershipGuard)
+  update(@Param("id") id: string, @Body() dto: UpdatePetPhotoDto, @CurrentUser() user: User) {
+    return this.photoService.updatePhoto(user.id, +id, dto);
   }
 
   @Delete(":id")
   @Auth()
-  remove(@Param("id") id: string, @Req() req) {
-    return this.photoService.removePhoto(req.user.id, +id);
+  @Resource("petPhoto")
+  @UseGuards(OwnershipGuard)
+  remove(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.photoService.removePhoto(user.id, +id);
   }
 
   @Patch(":id/primary")
   @Auth()
-  setPrimary(@Param("id") id: string, @Req() req) {
-    return this.photoService.setPrimary(req.user.id, +id);
+  @Resource("petPhoto")
+  @UseGuards(OwnershipGuard)
+  setPrimary(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.photoService.setPrimary(user.id, +id);
   }
 }

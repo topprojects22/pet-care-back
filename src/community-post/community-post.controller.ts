@@ -6,7 +6,6 @@ import {
     Body,
     Param,
     UseGuards,
-    Req,
     Query,
     Patch,
     Delete,
@@ -18,7 +17,9 @@ import { LikeService } from './like.service';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { PostType } from '@prisma/client';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('community-posts')
 export class CommunityPostController {
@@ -30,8 +31,8 @@ export class CommunityPostController {
 
     @Post()
     @Auth()
-    create(@Body() dto: CreateCommunityPostDto, @Req() req) {
-        return this.postService.createPost(req.user.id, dto);
+    create(@Body() dto: CreateCommunityPostDto, @CurrentUser() user: User) {
+        return this.postService.createPost(user.id, dto);
     }
 
     @Get()
@@ -40,33 +41,44 @@ export class CommunityPostController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.postService.findOne(+id);
+    findOne(@Param('id') id: string, @CurrentUser() user?: User) {
+        return this.postService.findOne(+id, user?.id);
     }
 
     @Patch(':id')
     @Auth()
-    update(@Param('id') id: string, @Body() dto: UpdateCommunityPostDto, @Req() req) {
-        return this.postService.updatePost(req.user.id, +id, dto);
+    update(@Param('id') id: string, @Body() dto: UpdateCommunityPostDto, @CurrentUser() user: User) {
+        return this.postService.updatePost(user.id, +id, dto);
     }
 
     @Delete(':id')
     @Auth()
-    remove(@Param('id') id: string, @Req() req) {
-        return this.postService.removePost(req.user.id, +id);
+    remove(@Param('id') id: string, @CurrentUser() user: User) {
+        return this.postService.removePost(user.id, +id);
     }
 
     // Лайки
     @Post(':id/like')
     @Auth()
-    like(@Param('id') id: string, @Req() req) {
-        return this.likeService.toggleLike(req.user.id, +id);
+    like(@Param('id') id: string, @CurrentUser() user: User) {
+        return this.likeService.toggleLike(user.id, +id);
     }
 
     // Комментарии
     @Post(':id/comments')
     @Auth()
-    comment(@Param('id') id: string, @Body() dto: CreateCommentDto, @Req() req) {
-        return this.commentService.createComment(req.user.id, +id, dto);
+    comment(@Param('id') id: string, @Body() dto: CreateCommentDto, @CurrentUser() user: User) {
+        return this.commentService.createComment(user.id, +id, dto);
+    }
+
+    // Репост
+    @Post(':id/repost')
+    @Auth()
+    repost(
+        @Param('id') id: string,
+        @Body() body: { comment?: string },
+        @CurrentUser() user: User,
+    ) {
+        return this.postService.repostPost(user.id, +id, body.comment);
     }
 }

@@ -36,7 +36,12 @@ export class OwnershipGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    const resourceId = request.params.id || request.params[`${resource}Id`];
+    
+    // Поддержка различных форматов параметров: id, petId, userId и т.д.
+    const resourceId = 
+      request.params.id || 
+      request.params[`${resource}Id`] ||
+      request.params[`${resource.toLowerCase()}Id`];
 
     if (!user || !resourceId) {
       throw new ForbiddenException('Access denied');
@@ -101,6 +106,50 @@ export class OwnershipGuard implements CanActivate {
             throw new NotFoundException('Shelter not found');
           }
           return shelter.ownerId === userId;
+        }
+
+        case 'user': {
+          // Для user просто проверяем, что id совпадает
+          return resourceId === userId;
+        }
+
+        case 'petphoto': {
+          // Для petPhoto получаем petId из фото и проверяем владение питомцем
+          const photo = await this.prisma.petPhoto.findUnique({
+            where: { id: resourceId },
+            select: { petId: true },
+          });
+          if (!photo) {
+            throw new NotFoundException('Photo not found');
+          }
+          // Рекурсивно проверяем владение питомцем
+          return this.checkOwnership('pet', photo.petId, userId);
+        }
+
+        case 'vetvisit': {
+          // Для vetVisit получаем petId из визита и проверяем владение питомцем
+          const visit = await this.prisma.admissionVetClinic.findUnique({
+            where: { id: resourceId },
+            select: { petId: true },
+          });
+          if (!visit) {
+            throw new NotFoundException('Vet visit not found');
+          }
+          // Рекурсивно проверяем владение питомцем
+          return this.checkOwnership('pet', visit.petId, userId);
+        }
+
+        case 'vaccination': {
+          // Для vaccination получаем petId из вакцинации и проверяем владение питомцем
+          const vaccination = await this.prisma.vaccination.findUnique({
+            where: { id: resourceId },
+            select: { petId: true },
+          });
+          if (!vaccination) {
+            throw new NotFoundException('Vaccination not found');
+          }
+          // Рекурсивно проверяем владение питомцем
+          return this.checkOwnership('pet', vaccination.petId, userId);
         }
 
         default:

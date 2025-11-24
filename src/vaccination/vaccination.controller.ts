@@ -8,13 +8,17 @@ import {
   Patch,
   Delete,
   UseGuards,
-  Req,
   Query,
 } from '@nestjs/common';
 import { VaccinationService } from './vaccination.service';
 import { CreateVaccinationDto } from './dto/create-vaccination.dto';
 import { UpdateVaccinationDto } from './dto/update-vaccination.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { GetVaccinationsQueryDto } from './dto/get-vaccinations-query.dto';
+import { Auth } from "../auth/decorators/auth.decorator";
+import { Resource } from '../common/decorators/resource.decorator';
+import { OwnershipGuard } from '../common/guards/ownership.guard';
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('pets/:petId/vaccinations')
 export class VaccinationController {
@@ -22,40 +26,55 @@ export class VaccinationController {
 
   @Post()
   @Auth()
+  @Resource('pet')
+  @UseGuards(OwnershipGuard)
   create(
       @Param('petId') petId: string,
       @Body() dto: CreateVaccinationDto,
-      @Req() req,
+      @CurrentUser() user: User,
   ) {
-    return this.vaccinationService.createVaccination(req.user.id, +petId, dto);
+    return this.vaccinationService.createVaccination(user.id, +petId, dto);
   }
 
   @Get()
+  @Auth()
+  @Resource('pet')
+  @UseGuards(OwnershipGuard)
   findAll(
       @Param('petId') petId: string,
-      @Query('future') future?: string,
+      @Query() query: GetVaccinationsQueryDto,
   ) {
-    return this.vaccinationService.findAllForPet(+petId, future === 'true');
+    return this.vaccinationService.findAllForPet(
+        +petId,
+        query,
+    );
   }
 
   @Get(':id')
+  @Auth()
+  @Resource('vaccination')
+  @UseGuards(OwnershipGuard)
   findOne(@Param('id') id: string) {
     return this.vaccinationService.findOne(+id);
   }
 
   @Patch(':id')
   @Auth()
+  @Resource('vaccination')
+  @UseGuards(OwnershipGuard)
   update(
       @Param('id') id: string,
       @Body() dto: UpdateVaccinationDto,
-      @Req() req,
+      @CurrentUser() user: User,
   ) {
-    return this.vaccinationService.updateVaccination(req.user.id, +id, dto);
+    return this.vaccinationService.updateVaccination(user.id, +id, dto);
   }
 
   @Delete(':id')
   @Auth()
-  remove(@Param('id') id: string, @Req() req) {
-    return this.vaccinationService.removeVaccination(req.user.id, +id);
+  @Resource('vaccination')
+  @UseGuards(OwnershipGuard)
+  remove(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.vaccinationService.removeVaccination(user.id, +id);
   }
 }

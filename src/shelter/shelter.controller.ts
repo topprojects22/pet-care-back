@@ -7,13 +7,15 @@ import {
     Patch,
     Param,
     Delete,
-    UseGuards,
-    Req,
 } from '@nestjs/common';
 import { ShelterService } from './shelter.service';
 import { CreateShelterDto } from './dto/create-shelter.dto';
 import { UpdateShelterDto } from './dto/update-shelter.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { AdoptAnimalDto } from './dto/adopt-animal.dto';
+import { CreateDonationDto } from './dto/create-donation.dto';
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('shelters')
 export class ShelterController {
@@ -21,8 +23,8 @@ export class ShelterController {
 
     @Post()
     @Auth()
-    create(@Body() dto: CreateShelterDto, @Req() req) {
-        return this.shelterService.createShelter(req.user.id, dto);
+    create(@Body() dto: CreateShelterDto, @CurrentUser() user: User) {
+        return this.shelterService.createShelter(user.id, dto);
     }
 
     @Get()
@@ -37,13 +39,43 @@ export class ShelterController {
 
     @Patch(':id')
     @Auth()
-    update(@Param('id') id: string, @Body() dto: UpdateShelterDto, @Req() req) {
-        return this.shelterService.updateShelter(req.user.id, +id, dto);
+    update(@Param('id') id: string, @Body() dto: UpdateShelterDto, @CurrentUser() user: User) {
+        return this.shelterService.updateShelter(user.id, +id, dto);
     }
 
     @Delete(':id')
     @Auth()
-    remove(@Param('id') id: string, @Req() req) {
-        return this.shelterService.removeShelter(req.user.id, +id);
+    remove(@Param('id') id: string, @CurrentUser() user: User) {
+        return this.shelterService.removeShelter(user.id, +id);
+    }
+
+    @Post(':shelterId/animals/:animalId/adopt')
+    @Auth()
+    async adoptAnimal(
+        @Param('shelterId') shelterId: string,
+        @Param('animalId') animalId: string,
+        @Body() dto: AdoptAnimalDto,
+        @CurrentUser() user: User
+    ) {
+        return this.shelterService.adoptAnimal(
+            user.id,
+            +shelterId,
+            +animalId,
+            dto
+        );
+    }
+
+    @Post(':shelterId/donations')
+    @Auth()
+    async createDonation(
+        @Param('shelterId') shelterId: string,
+        @Body() dto: CreateDonationDto,
+        @CurrentUser() user: User
+    ) {
+        return this.shelterService.createDonation(
+            user.id,
+            +shelterId,
+            dto
+        );
     }
 }

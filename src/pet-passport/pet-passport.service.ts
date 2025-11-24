@@ -8,13 +8,15 @@ import {
 import { PrismaService } from '../prisma.service';
 import { CreatePetPassportDto } from './dto/create-pet-passport.dto';
 import { PassportPdfGeneratorService } from './passport-pdf-generator.service';
-import {UpdatePetPassportDto} from "./dto/update-pet-passport.dto";
+import { UpdatePetPassportDto } from './dto/update-pet-passport.dto';
+import { QrCodeService } from './qr-code.service';
 
 @Injectable()
 export class PetPassportService {
     constructor(
         private prisma: PrismaService,
         private pdfGenerator: PassportPdfGeneratorService,
+        private qrCodeService: QrCodeService,
     ) {}
 
     async createPassport(userId: number, petId: number, dto: CreatePetPassportDto) {
@@ -92,5 +94,24 @@ export class PetPassportService {
     async generatePdf(petId: number): Promise<Buffer> {
         const passport = await this.findOneByPetId(petId);
         return this.pdfGenerator.generatePdf(passport);
+    }
+
+    /**
+     * Генерирует QR-код изображение для паспорта
+     */
+    async generateQrCodeImage(petId: number): Promise<Buffer> {
+        const passport = await this.findOneByPetId(petId);
+        if (!passport.chip) {
+            throw new BadRequestException('Passport does not have a chip number');
+        }
+        return this.qrCodeService.generateQrCode(petId, passport.chip);
+    }
+
+    /**
+     * Получает QR-код URL для паспорта
+     */
+    async getQrCodeUrl(petId: number): Promise<string> {
+        const passport = await this.findOneByPetId(petId);
+        return passport.qrCode || '';
     }
 }

@@ -8,27 +8,67 @@ import {
     Body,
     Param,
     Query,
-    UseGuards,
-    Req,
 } from '@nestjs/common';
 import { EventParticipationService } from './event-participation.service';
+import { CommunityPostService } from '../community-post/community-post.service';
 import { CreateEventParticipationDto } from './dto/create-event-participation.dto';
 import { UpdateEventParticipationDto } from './dto/update-event-participation.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('events')
 export class EventParticipationController {
-    constructor(private readonly participationService: EventParticipationService) {}
+    constructor(
+        private readonly participationService: EventParticipationService,
+        private readonly communityPostService: CommunityPostService,
+    ) {}
 
-    // Записаться на событие
+    /**
+     * GET /api/events
+     * Получает каталог событий (посты с типом EVENT)
+     */
+    @Get()
+    async getEvents(
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('location') location?: string,
+        @CurrentUser() user?: User,
+    ) {
+        return this.communityPostService.findAll({
+            type: 'EVENT',
+            page: page ? +page : undefined,
+            limit: limit ? +limit : undefined,
+            userId: user?.id,
+        });
+    }
+
+    /**
+     * POST /api/events/:id/register
+     * Алиас для регистрации на событие (соответствует спецификации)
+     */
+    @Post(':id/register')
+    @Auth()
+    register(
+        @Param('id') id: string,
+        @Body() dto: CreateEventParticipationDto,
+        @CurrentUser() user: User,
+    ) {
+        return this.participationService.createParticipation(user.id, {
+            ...dto,
+            postId: +id,
+        });
+    }
+
+    // Записаться на событие (оригинальный эндпоинт для обратной совместимости)
     @Post(':postId/participate')
     @Auth()
     participate(
         @Param('postId') postId: string,
         @Body() dto: CreateEventParticipationDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.participationService.createParticipation(req.user.id, {
+        return this.participationService.createParticipation(user.id, {
             ...dto,
             postId: +postId,
         });
@@ -45,10 +85,10 @@ export class EventParticipationController {
     @Auth()
     getMyParticipation(
         @Param('postId') postId: string,
-        @Req() req,
+        @CurrentUser() user: User,
         @Query('petId') petId?: string,
     ) {
-        return this.participationService.findOne(+postId, req.user.id, petId ? +petId : undefined);
+        return this.participationService.findOne(+postId, user.id, petId ? +petId : undefined);
     }
 
     // Обновить участие (например, отменить)
@@ -57,11 +97,11 @@ export class EventParticipationController {
     updateMyParticipation(
         @Param('postId') postId: string,
         @Body() dto: UpdateEventParticipationDto,
-        @Req() req,
+        @CurrentUser() user: User,
         @Query('petId') petId?: string,
     ) {
         return this.participationService.updateParticipation(
-            req.user.id,
+            user.id,
             +postId,
             dto,
             petId ? +petId : undefined,
@@ -73,11 +113,11 @@ export class EventParticipationController {
     @Auth()
     removeMyParticipation(
         @Param('postId') postId: string,
-        @Req() req,
+        @CurrentUser() user: User,
         @Query('petId') petId?: string,
     ) {
         return this.participationService.removeParticipation(
-            req.user.id,
+            user.id,
             +postId,
             petId ? +petId : undefined,
         );
@@ -86,7 +126,7 @@ export class EventParticipationController {
     // Только для организатора: кто участвует в моём событии?
     @Get(':postId/participants/mine')
     @Auth()
-    getMyEventParticipants(@Param('postId') postId: string, @Req() req) {
-        return this.participationService.getParticipantsForUserEvent(req.user.id, +postId);
+    getMyEventParticipants(@Param('postId') postId: string, @CurrentUser() user: User) {
+        return this.participationService.getParticipantsForUserEvent(user.id, +postId);
     }
 }

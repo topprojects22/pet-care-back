@@ -6,72 +6,123 @@ import {
   Param,
   Put,
   Delete,
-  Req,
+  UseGuards,
+  Res,
+  Query,
+  Header,
 } from "@nestjs/common";
+import { Response } from 'express';
 import { PetService } from "./pet.service";
 import {
   CreatePetDto,
   UpdatePetDto,
   CreatePetPassportDto,
 } from "./dto/pet.dto";
+import { GetPetsQueryDto } from "./dto/get-pets-query.dto";
+import { Query } from "@nestjs/common";
 import { Auth } from "../auth/decorators/auth.decorator";
+import { OwnershipGuard } from "../common/guards/ownership.guard";
+import { Resource } from "../common/decorators/resource.decorator";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
+import { PassportPdfService } from "./services/passport-pdf.service";
 
 @Controller("pet")
 export class PetController {
-  constructor(private readonly petService: PetService) {}
+  constructor(
+    private readonly petService: PetService,
+    private readonly passportPdfService: PassportPdfService,
+  ) {}
 
   @Get("user")
   @Auth()
-  async getUserPets(@Req() req) {
-    return this.petService.getUserPets(+req.user.id);
+  async getUserPets(
+    @CurrentUser() user: User,
+    @Query() query: GetPetsQueryDto
+  ) {
+    return this.petService.getUserPets(
+      user.id,
+      query.page || 1,
+      query.limit || 20,
+      query.type,
+      query.sort || 'createdAt',
+      query.order || 'desc'
+    );
   }
 
   @Get(":id")
   @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   async getPet(@Param("id") id: string) {
     return this.petService.getPetWithDetails(+id);
   }
 
   @Post()
   @Auth()
-  async createPet(@Body() petData: CreatePetDto,  @Req() req) {
-    return this.petService.createPet(petData, req.user.id);
+  async createPet(
+    @Body() petData: CreatePetDto,
+    @CurrentUser() user: User
+  ) {
+    return this.petService.createPet(petData, user.id);
   }
 
   @Put(":id")
   @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   async updatePet(@Param("id") id: string, @Body() petData: UpdatePetDto) {
     return this.petService.updatePet(+id, petData);
   }
 
   @Delete(":id")
   @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   async deletePet(@Param("id") id: string) {
     return this.petService.deletePet(+id);
   }
 
-  @Get("passport/:petId")
+  @Get(":petId/passport")
   @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   async getPetPassport(@Param("petId") petId: string) {
     return this.petService.getPetPassport(+petId);
   }
 
-  @Post("passport")
+  @Post(":petId/passport")
   @Auth()
-  async createPetPassport(@Body() passportData: CreatePetPassportDto) {
-    return this.petService.createPetPassport(passportData);
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
+  async createPetPassport(
+    @Param("petId") petId: string,
+    @Body() passportData: CreatePetPassportDto,
+  ) {
+    return this.petService.createPetPassport({
+      ...passportData,
+      petId: +petId,
+    });
   }
 
-  @Delete("passport/:id")
+  @Delete(":petId/passport")
   @Auth()
-  async deletePetPassport(@Param("id") id: string) {
-    return this.petService.deletePetPassport(+id);
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
+  async deletePetPassport(@Param("petId") petId: string) {
+    const passport = await this.petService.getPetPassport(+petId);
+    if (passport) {
+      return this.petService.deletePetPassport(passport.id);
+    }
+    throw new Error("Passport not found");
   }
 
-  @Post(":id/photos")
+  @Post(":petId/photos")
   @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   async addPetPhoto(
-    @Param("id") petId: string,
+    @Param("petId") petId: string,
     @Body() photoData: { url: string; isPrimary?: boolean }
   ) {
     return this.petService.addPetPhoto(
@@ -81,30 +132,82 @@ export class PetController {
     );
   }
 
-  @Post("photos/:photoId/set-primary")
+  @Post(":petId/photos/:photoId/set-primary")
   @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
   async setPrimaryPhoto(
-    @Param("photoId") photoId: string,
-    @Body("petId") petId: number
+    @Param("petId") petId: string,
+    @Param("photoId") photoId: string
   ) {
-    return this.petService.setPrimaryPhoto(petId,+photoId);
+    return this.petService.setPrimaryPhoto(+petId, +photoId);
   }
 
-  @Delete("photos/:photoId")
+  @Delete(":petId/photos/:photoId")
   @Auth()
-  async deletePhoto(@Param("photoId") photoId: string) {
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
+  async deletePhoto(
+    @Param("petId") petId: string,
+    @Param("photoId") photoId: string
+  ) {
     return this.petService.deletePhoto(+photoId);
   }
 
-  @Get(":id/medications")
+  @Get(":petId/medications")
   @Auth()
-  async getPetMedications(@Param("id") petId: string) {
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
+  async getPetMedications(@Param("petId") petId: string) {
     return this.petService.getPetMedications(+petId);
   }
 
-  @Get(":id/vaccinations")
+  @Get(":petId/vaccinations")
   @Auth()
-  async getPetVaccinations(@Param("id") petId: string) {
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
+  async getPetVaccinations(@Param("petId") petId: string) {
     return this.petService.getPetVaccinations(+petId);
+  }
+
+  @Get(":petId/passport/pdf")
+  @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'attachment; filename=pet-passport.pdf')
+  async getPetPassportPdf(
+    @Param("petId") petId: string,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.passportPdfService.generatePassportPdf(+petId);
+    res.send(buffer);
+  }
+
+  @Get(":petId/passport/qr")
+  @Auth()
+  @Resource("pet")
+  @UseGuards(OwnershipGuard)
+  @Header('Content-Type', 'image/png')
+  async getPetPassportQr(
+    @Param("petId") petId: string,
+    @Res() res: Response,
+  ) {
+    const passport = await this.petService.getPetPassport(+petId);
+    if (!passport || !passport.chip) {
+      throw new Error('Passport not found or chip number missing');
+    }
+    
+    // Генерируем QR-код через библиотеку qrcode
+    const QRCode = await import('qrcode');
+    const qrData = passport.qrCode || `https://petcare.app/pet/${petId}/passport?chip=${passport.chip}`;
+    const qrCodeBuffer = await QRCode.toBuffer(qrData, {
+      errorCorrectionLevel: 'M',
+      type: 'png',
+      width: 300,
+      margin: 1,
+    });
+    
+    res.send(qrCodeBuffer);
   }
 }

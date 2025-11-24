@@ -3,24 +3,24 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   UsePipes,
   ValidationPipe,
   Query,
-  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 import {
   LoginAuthDto,
   RegisterAuthDto,
   AccessTokenAuthDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  GoogleAuthDto,
+  AppleAuthDto,
 } from './dto/auth.dto';
 import { EmailVerificationService } from './email-verification.service';
 import { Auth } from './decorators/auth.decorator';
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -28,31 +28,6 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly emailVerificationService: EmailVerificationService,
   ) {}
-
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.authService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
-  }
 
   @UsePipes(new ValidationPipe())
   @Post('login')
@@ -77,11 +52,40 @@ export class AuthController {
 
   @Post('resend-verification')
   @Auth()
-  async resendVerificationEmail(@Req() req) {
-    await this.emailVerificationService.resendVerificationEmail(req.user.id);
+  async resendVerificationEmail(@CurrentUser() user: User) {
+    await this.emailVerificationService.resendVerificationEmail(user.id);
     return {
       success: true,
       message: 'Verification email has been sent',
     };
+  }
+
+  @UsePipes(new ValidationPipe())
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @UsePipes(new ValidationPipe())
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @UsePipes(new ValidationPipe())
+  @Post('google')
+  async googleAuth(@Body() googleAuthDto: GoogleAuthDto) {
+    return this.authService.googleAuth(googleAuthDto.token, googleAuthDto.deviceId);
+  }
+
+  @UsePipes(new ValidationPipe())
+  @Post('apple')
+  async appleAuth(@Body() appleAuthDto: AppleAuthDto) {
+    return this.authService.appleAuth(
+      appleAuthDto.token,
+      appleAuthDto.identityToken,
+      appleAuthDto.authorizationCode,
+      appleAuthDto.deviceId,
+    );
   }
 }

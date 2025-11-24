@@ -6,15 +6,18 @@ import {
     Body,
     Param,
     Patch,
-    UseGuards,
-    Req,
     Res,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PetPassportService } from './pet-passport.service';
 import { CreatePetPassportDto } from './dto/create-pet-passport.dto';
 import { UpdatePetPassportDto } from './dto/update-pet-passport.dto';
-import {Auth} from "../auth/decorators/auth.decorator";
+import { Auth } from "../auth/decorators/auth.decorator";
+import { Resource } from '../common/decorators/resource.decorator';
+import { OwnershipGuard } from '../common/guards/ownership.guard';
+import { UseGuards } from '@nestjs/common';
+import { CurrentUser } from '../common/decorators/user.decorator';
+import { User } from '@prisma/client';
 
 @Controller('pets/:petId/passport')
 export class PetPassportController {
@@ -22,30 +25,40 @@ export class PetPassportController {
 
     @Post()
     @Auth()
+    @Resource('pet')
+    @UseGuards(OwnershipGuard)
     create(
         @Param('petId') petId: string,
         @Body() dto: CreatePetPassportDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.passportService.createPassport(req.user.id, +petId, dto);
+        return this.passportService.createPassport(user.id, +petId, dto);
     }
 
     @Get()
+    @Auth()
+    @Resource('pet')
+    @UseGuards(OwnershipGuard)
     async findOne(@Param('petId') petId: string) {
         return this.passportService.findOneByPetId(+petId);
     }
 
     @Patch()
     @Auth()
+    @Resource('pet')
+    @UseGuards(OwnershipGuard)
     update(
         @Param('petId') petId: string,
         @Body() dto: UpdatePetPassportDto,
-        @Req() req,
+        @CurrentUser() user: User,
     ) {
-        return this.passportService.updatePassport(req.user.id, +petId, dto);
+        return this.passportService.updatePassport(user.id, +petId, dto);
     }
 
     @Get('pdf')
+    @Auth()
+    @Resource('pet')
+    @UseGuards(OwnershipGuard)
     async getPdf(@Param('petId') petId: string, @Res() res: Response) {
         const pdf = await this.passportService.generatePdf(+petId);
         res.set({
@@ -56,8 +69,15 @@ export class PetPassportController {
     }
 
     @Get('qr')
-    async getQrCode(@Param('petId') petId: string) {
-        const passport = await this.passportService.findOneByPetId(+petId);
-        return { qrCode: passport.qrCode };
+    @Auth()
+    @Resource('pet')
+    @UseGuards(OwnershipGuard)
+    async getQrCode(
+        @Param('petId') petId: string,
+        @Res() res: Response,
+    ) {
+        const qrCodeBuffer = await this.passportService.generateQrCodeImage(+petId);
+        res.setHeader('Content-Type', 'image/png');
+        res.send(qrCodeBuffer);
     }
 }

@@ -22,6 +22,10 @@ export default registerAs('app', () => ({
     refreshTokenExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   database: {
+    connectionLimit: parseInt(process.env.DATABASE_CONNECTION_LIMIT || '10', 10),
+    poolTimeout: parseInt(process.env.DATABASE_POOL_TIMEOUT || '20', 10),
+  },
+  database: {
     url: process.env.DATABASE_URL,
   },
   app: {

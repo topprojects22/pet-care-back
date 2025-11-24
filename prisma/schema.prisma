@@ -44,16 +44,23 @@ model User {
   postComment        PostComment[]
   eventParticipation EventParticipation[]
 
-  shelter Shelter[]
+  shelter           Shelter[]
   emailVerification EmailVerification[]
+  passwordReset     PasswordReset[]
+  adoptionRequests  AdoptionRequest[]
+  donations         Donation[]
+  paymentSessions   PaymentSession[]
+
+  @@index([roleId])
+  @@index([createdAt])
 }
 
 model EmailVerification {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique @map("user_id")
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  id         Int       @id @default(autoincrement())
+  userId     Int       @unique @map("user_id")
+  token      String    @unique
+  expiresAt  DateTime  @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
   verifiedAt DateTime? @map("verified_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -62,9 +69,24 @@ model EmailVerification {
   @@index([userId])
 }
 
+model PasswordReset {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model Pet {
   id              Int        @id @default(autoincrement())
-  avatarPath String? @map("avatar_path") // для аватара питомца
+  avatarPath      String?    @map("avatar_path") // для аватара питомца
   name            String
   userId          Int?       @map("user_id")
   birthDate       DateTime?  @map("birth_date")
@@ -99,6 +121,11 @@ model Pet {
   petBoardingBooking PetBoardingBooking[]
   petJournalEntry    PetJournalEntry[]
   eventParticipation EventParticipation[]
+
+  @@index([userId])
+  @@index([animalTypeId])
+  @@index([createdAt])
+  @@index([userId, createdAt]) // Составной индекс для частых запросов списка питомцев пользователя
 }
 
 enum PetGender {
@@ -239,6 +266,11 @@ model AdmissionVetClinic {
 
   pet    Pet    @relation(fields: [petId], references: [id])
   clinic Clinic @relation(fields: [clinicId], references: [id])
+
+  @@index([petId])
+  @@index([clinicId])
+  @@index([visitDate])
+  @@index([petId, visitDate]) // Составной индекс для истории визитов питомца
 }
 
 model Service {
@@ -258,8 +290,9 @@ model Service {
   updatedAt         DateTime @updatedAt @map("updated_at")
   clinicId          Int      @map("clinic_id")
 
-  clinic   Clinic    @relation(fields: [clinicId], references: [id])
-  payments Payment[]
+  clinic          Clinic           @relation(fields: [clinicId], references: [id])
+  payments        Payment[]
+  paymentSessions PaymentSession[]
 }
 
 model Role {
@@ -290,6 +323,12 @@ model Notification {
 
   user              User                @relation(fields: [userId], references: [id])
   petOnNotification PetOnNotification[]
+
+  @@index([userId])
+  @@index([type])
+  @@index([isCompleted])
+  @@index([userId, isCompleted]) // Составной индекс для фильтрации по пользователю и статусу
+  @@index([expiriedAt])
 }
 
 enum NotificationType {
@@ -322,6 +361,10 @@ model Medication {
   pet       Pet      @relation(fields: [petId], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([petId])
+  @@index([startDate])
+  @@index([endDate])
 }
 
 model Vaccination {
@@ -338,6 +381,10 @@ model Vaccination {
   pet       Pet      @relation(fields: [petId], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([petId])
+  @@index([date])
+  @@index([petId, date]) // Составной индекс для истории вакцинаций питомца
 }
 
 model PetPhoto {
@@ -399,8 +446,50 @@ model Payment {
   status        String   @default("completed")
   invoiceNumber String?  @map("invoice_number")
 
+  user           User            @relation(fields: [userId], references: [id])
+  service        Service?        @relation(fields: [serviceId], references: [id])
+  paymentSession PaymentSession?
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentDate])
+  @@index([userId, status]) // Составной индекс для истории транзакций пользователя
+}
+
+model PaymentSession {
+  id             String               @id @default(uuid())
+  userId         Int                  @map("user_id")
+  amount         Float
+  currency       String               @default("RUB")
+  description    String?
+  status         PaymentSessionStatus @default(PENDING)
+  serviceId      Int?                 @map("service_id")
+  serviceType    String?              @map("service_type") // veterinary, grooming, boarding, charity, subscription
+  metadata       Json? // Дополнительные данные (petId, clinicId, appointmentDate и т.д.)
+  expiresAt      DateTime             @map("expires_at")
+  paymentMethods String[]             @map("payment_methods") // ["card", "apple_pay", "google_pay"]
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+  paidAt         DateTime?            @map("paid_at")
+  paymentId      Int?                 @unique @map("payment_id")
+
   user    User     @relation(fields: [userId], references: [id])
   service Service? @relation(fields: [serviceId], references: [id])
+  payment Payment? @relation(fields: [paymentId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([serviceType])
+}
+
+enum PaymentSessionStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  EXPIRED
+  CANCELLED
 }
 
 model Review {
@@ -463,6 +552,12 @@ model PetBoardingBooking {
   user              User                 @relation(fields: [userId], references: [id])
   payments          PetBoardingPayment[]
   petBoardingReview PetBoardingReview[]
+
+  @@index([userId])
+  @@index([petId])
+  @@index([boardingId])
+  @@index([status])
+  @@index([startDate, endDate]) // Для поиска по датам
 }
 
 model PetBoardingPayment {
@@ -537,6 +632,12 @@ model CommunityPost {
   likes              PostLike[]
   comments           PostComment[]
   eventParticipation EventParticipation[]
+
+  @@index([authorId])
+  @@index([shelterId])
+  @@index([postType])
+  @@index([createdAt])
+  @@index([isPinned, createdAt]) // Для сортировки закрепленных постов
 }
 
 model Shelter {
@@ -554,10 +655,15 @@ model Shelter {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  ownerId Int             @map("owner_id")
-  owner   User            @relation(fields: [ownerId], references: [id])
-  posts   CommunityPost[]
-  animals ShelterAnimal[]
+  ownerId          Int               @map("owner_id")
+  owner            User              @relation(fields: [ownerId], references: [id])
+  posts            CommunityPost[]
+  animals          ShelterAnimal[]
+  adoptionRequests AdoptionRequest[]
+  donations        Donation[]
+
+  @@index([ownerId])
+  @@index([isActive])
 }
 
 model ShelterAnimal {
@@ -576,9 +682,13 @@ model ShelterAnimal {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  shelter    Shelter      @relation(fields: [shelterId], references: [id])
-  animalType AnimalType   @relation(fields: [animalTypeId], references: [id])
-  breed      AnimalBreed? @relation(fields: [breedId], references: [id])
+  shelter          Shelter           @relation(fields: [shelterId], references: [id])
+  animalType       AnimalType        @relation(fields: [animalTypeId], references: [id])
+  breed            AnimalBreed?      @relation(fields: [breedId], references: [id])
+  adoptionRequests AdoptionRequest[]
+
+  @@index([shelterId])
+  @@index([isAdopted])
 }
 
 model PostLike {
@@ -591,6 +701,8 @@ model PostLike {
   user User          @relation(fields: [userId], references: [id])
 
   @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
 }
 
 model PostComment {
@@ -605,6 +717,10 @@ model PostComment {
   user    User          @relation(fields: [userId], references: [id])
   parent  PostComment?  @relation("CommentReplies", fields: [parentId], references: [id])
   replies PostComment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([userId])
+  @@index([parentId])
 }
 
 model EventParticipation {
@@ -654,4 +770,72 @@ enum PaymentMethod {
   CARD
   BANK_TRANSFER
   ONLINE
+}
+
+model AdoptionRequest {
+  id                 Int            @id @default(autoincrement())
+  shelterId          Int            @map("shelter_id")
+  animalId           Int            @map("animal_id")
+  userId             Int            @map("user_id")
+  status             AdoptionStatus @default(PENDING)
+  contactPhone       String         @map("contact_phone")
+  address            String
+  adoptionReason     String?        @map("adoption_reason")
+  previousExperience Boolean        @default(false) @map("previous_experience")
+  agreementAccepted  Boolean        @default(false) @map("agreement_accepted")
+  notes              String?
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  reviewedAt         DateTime?      @map("reviewed_at")
+  reviewedBy         Int?           @map("reviewed_by")
+
+  shelter Shelter       @relation(fields: [shelterId], references: [id])
+  animal  ShelterAnimal @relation(fields: [animalId], references: [id])
+  user    User          @relation(fields: [userId], references: [id])
+
+  @@unique([animalId, userId]) // Один пользователь может подать только одну заявку на одно животное
+  @@index([shelterId])
+  @@index([animalId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum AdoptionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Donation {
+  id               Int            @id @default(autoincrement())
+  shelterId        Int            @map("shelter_id")
+  userId           Int?           @map("user_id") // null для анонимных пожертвований
+  amount           Float
+  currency         String         @default("RUB")
+  message          String?
+  anonymous        Boolean        @default(false)
+  recurring        Boolean        @default(false)
+  status           DonationStatus @default(PENDING)
+  paymentSessionId String?        @map("payment_session_id")
+  transactionId    String?        @map("transaction_id")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  paidAt           DateTime?      @map("paid_at")
+
+  shelter Shelter @relation(fields: [shelterId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
+
+  @@index([shelterId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum DonationStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }

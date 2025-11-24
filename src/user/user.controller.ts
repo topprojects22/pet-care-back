@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Body, Req } from "@nestjs/common";
+import { Controller, Get, Put, Param, Body, UseGuards } from "@nestjs/common";
 import { UserService } from "./user.service";
 import {
   UpdateUserDto,
@@ -6,34 +6,46 @@ import {
   ChangePasswordDto,
 } from "./dto/user.dto";
 import { Auth } from "../auth/decorators/auth.decorator";
+import { OwnershipGuard } from "../common/guards/ownership.guard";
+import { Resource } from "../common/decorators/resource.decorator";
+import { CurrentUser } from "../common/decorators/user.decorator";
+import { User } from "@prisma/client";
 
 @Controller("user")
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get("")
+  @Get("profile")
   @Auth()
-  async getUserProfile(@Req() req) {
-    return this.userService.getUserProfile(+req.user.id);
+  async getUserProfile(@CurrentUser() user: User) {
+    return this.userService.getUserProfile(user.id);
   }
 
   @Put(":id")
   @Auth()
+  @Resource("user")
+  @UseGuards(OwnershipGuard)
   async updateUserProfile(
     @Param("id") id: string,
-    @Body() userData: UpdateUserDto
+    @Body() userData: UpdateUserDto,
+    @CurrentUser() user: User
   ) {
     return this.userService.updateUserProfile(+id, userData);
   }
 
   @Get(":id/preferences")
   @Auth()
+  @Resource("user")
+  @UseGuards(OwnershipGuard)
   async getUserPreferences(@Param("id") id: string) {
     return this.userService.getUserPreferences(+id);
   }
 
   @Put(":id/preferences")
   @Auth()
+  @Resource("user")
+  @UseGuards(OwnershipGuard)
   async updateUserPreferences(
     @Param("id") id: string,
     @Body() preferences: UserPreferencesDto
@@ -43,6 +55,8 @@ export class UserController {
 
   @Put(":id/password")
   @Auth()
+  @Resource("user")
+  @UseGuards(OwnershipGuard)
   async changePassword(
     @Param("id") id: string,
     @Body() passwordData: ChangePasswordDto
@@ -52,12 +66,16 @@ export class UserController {
 
   @Get(":id/favorites/clinics")
   @Auth()
+  @Resource("user")
+  @UseGuards(OwnershipGuard)
   async getFavoriteClinics(@Param("id") id: string) {
     return this.userService.getUserFavoriteClinics(+id);
   }
 
   @Put(":id/favorites/clinics/:clinicId")
   @Auth()
+  @Resource("user")
+  @UseGuards(OwnershipGuard)
   async toggleFavoriteClinic(
     @Param("id") id: string,
     @Param("clinicId") clinicId: string

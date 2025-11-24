@@ -8,11 +8,20 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { getJwtConfig } from '../config/jwt.config';
 import { JwtStrategy } from './jwt.strategy';
 import { EmailVerificationService } from './email-verification.service';
+import { GoogleAuthService } from './services/google-auth.service';
+import { AppleAuthService } from './services/apple-auth.service';
 import mailerConfig from '../config/mailer.config';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, EmailVerificationService, JwtStrategy, PrismaService],
+  providers: [
+    AuthService,
+    EmailVerificationService,
+    JwtStrategy,
+    PrismaService,
+    GoogleAuthService,
+    AppleAuthService,
+  ],
   imports: [
     ConfigModule,
     JwtModule.registerAsync({
