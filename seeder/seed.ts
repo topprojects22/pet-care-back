@@ -530,7 +530,7 @@ async function createPetRelatedData(pet: any, breed: any, clinics: any[], servic
       metricType: faker.helpers.arrayElement(['Weight', 'Temperature', 'Pulse', 'Respiration']),
       value: faker.number.float({ min: 1, max: 50, precision: 0.1 }),
       notes: faker.datatype.boolean() ? faker.lorem.sentence() : null,
-      recordedAt: faker.date.past(),
+      measuredAt: faker.date.past(),
     })),
   });
 
