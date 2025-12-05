@@ -73,7 +73,7 @@ export class SocialController {
    * GET /api/social/users/:id
    * Получает профиль пользователя для социальной сети
    */
-  @Get('users/:id')
+  @Get('user')
   async getUserProfile(@Param('id') id: string) {
     return this.socialService.getUserProfile(+id);
   }

@@ -8,6 +8,7 @@ import {
     Body,
     Param,
     Query,
+    BadRequestException,
 } from '@nestjs/common';
 import { EventParticipationService } from './event-participation.service';
 import { CommunityPostService } from '../community-post/community-post.service';
@@ -41,6 +42,22 @@ export class EventParticipationController {
             limit: limit ? +limit : undefined,
             userId: user?.id,
         });
+    }
+
+    /**
+     * GET /api/events/:id
+     * Получает детали события по ID
+     */
+    @Get(':id')
+    async getEvent(@Param('id') id: string, @CurrentUser() user?: User) {
+        const post = await this.communityPostService.findOne(+id, user?.id);
+        
+        // Проверяем, что это событие (EVENT)
+        if (post.postType !== 'EVENT') {
+            throw new BadRequestException('Post is not an event');
+        }
+        
+        return post;
     }
 
     /**

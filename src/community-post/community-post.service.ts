@@ -61,7 +61,10 @@ export class CommunityPostService {
             this.prisma.communityPost.findMany({
                 where: {
                     ...(type && { postType: type }),
-                    OR: [{ author: { isNot: null } }, { shelter: { isNot: null } }],
+                    OR: [
+                        { authorId: { not: null } },
+                        { shelterId: { not: null } },
+                    ],
                 },
                 select: {
                     id: true,
@@ -96,7 +99,10 @@ export class CommunityPostService {
             this.prisma.communityPost.count({
                 where: {
                     ...(type && { postType: type }),
-                    OR: [{ author: { isNot: null } }, { shelter: { isNot: null } }],
+                    OR: [
+                        { authorId: { not: null } },
+                        { shelterId: { not: null } },
+                    ],
                 },
             }),
         ]);

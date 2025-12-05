@@ -58,7 +58,7 @@ export class ShelterService {
 
     async findOne(id: number) {
         const shelter = await this.prisma.shelter.findUnique({
-            where: { id, isActive: true },
+            where: { id },
             include: {
                 animals: {
                     where: { isAdopted: false },
@@ -72,6 +72,7 @@ export class ShelterService {
         });
 
         if (!shelter) throw new NotFoundException('Shelter not found');
+        if (!shelter.isActive) throw new NotFoundException('Shelter not found');
         return shelter;
     }
 
@@ -115,10 +116,10 @@ export class ShelterService {
     ) {
         // Проверяем существование приюта
         const shelter = await this.prisma.shelter.findUnique({
-            where: { id: shelterId, isActive: true },
+            where: { id: shelterId },
         });
 
-        if (!shelter) {
+        if (!shelter || !shelter.isActive) {
             throw new NotFoundException('Shelter not found');
         }
 
@@ -270,10 +271,10 @@ export class ShelterService {
     ) {
         // Проверяем существование приюта
         const shelter = await this.prisma.shelter.findUnique({
-            where: { id: shelterId, isActive: true },
+            where: { id: shelterId },
         });
 
-        if (!shelter) {
+        if (!shelter || !shelter.isActive) {
             throw new NotFoundException('Shelter not found');
         }
 
