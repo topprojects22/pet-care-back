@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  Logger,
 } from "@nestjs/common";
 import {
   LoginAuthDto,
@@ -23,9 +24,12 @@ import { MailerService } from "@nestjs-modules/mailer";
 import { randomBytes } from "crypto";
 import { GoogleAuthService } from "./services/google-auth.service";
 import { AppleAuthService } from "./services/apple-auth.service";
+import { isDevelopment } from "../common/utils/env.util";
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
@@ -71,7 +75,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         email: registerAuthDto.email,
-        name: faker.name.firstName(),
+        name: '',
         avatarPath: faker.image.avatar(),
         phone: faker.phone.number("+7 (###) ###-##-##"),
         password: await hash(registerAuthDto.password),
@@ -315,22 +319,30 @@ export class AuthService {
       'http://localhost:5000';
     const resetUrl = `${baseUrl}/${apiPrefix}/auth/reset-password?token=${token}`;
 
-    // Отправляем email
-    try {
-      await this.mailerService.sendMail({
-        to: user.email,
-        subject: 'Восстановление пароля - Pet Care',
-        template: 'password-reset', // Шаблон из templates/
-        context: {
-          resetUrl,
-          token,
-          expirationHours: 1,
-          userName: user.name || 'Пользователь',
-        },
-      });
-    } catch (error) {
-      // Логируем ошибку, но не прерываем процесс
-      console.error('Failed to send password reset email:', error);
+    // В development режиме мокаем отправку email
+    if (isDevelopment()) {
+      this.logger.log(`[DEV MODE] Password reset email would be sent to: ${user.email}`);
+      this.logger.log(`[DEV MODE] Reset URL: ${resetUrl}`);
+      this.logger.log(`[DEV MODE] Token: ${token}`);
+    } else {
+      // Отправляем email в production
+      try {
+        await this.mailerService.sendMail({
+          to: user.email,
+          subject: 'Восстановление пароля - Pet Care',
+          template: 'password-reset', // Шаблон из templates/
+          context: {
+            resetUrl,
+            token,
+            expirationHours: 1,
+            userName: user.name || 'Пользователь',
+          },
+        });
+        this.logger.log(`Password reset email sent to: ${user.email}`);
+      } catch (error) {
+        // Логируем ошибку, но не прерываем процесс
+        this.logger.error('Failed to send password reset email:', error);
+      }
     }
 
     return {

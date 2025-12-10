@@ -3,15 +3,18 @@ import {
   BadRequestException,
   NotFoundException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { randomBytes } from 'crypto';
+import { isDevelopment } from '../common/utils/env.util';
 
 @Injectable()
 export class EmailVerificationService {
   private readonly tokenExpirationHours = 24;
+  private readonly logger = new Logger(EmailVerificationService.name);
 
   constructor(
     private prisma: PrismaService,
@@ -56,7 +59,17 @@ export class EmailVerificationService {
       'http://localhost:5000';
     const verificationUrl = `${baseUrl}/${apiPrefix}/auth/verify-email?token=${token}`;
 
-    // Отправляем email
+    // В development режиме мокаем отправку email
+    if (isDevelopment()) {
+      this.logger.log(
+        `[DEV MODE] Email verification would be sent to: ${email}`,
+      );
+      this.logger.log(`[DEV MODE] Verification URL: ${verificationUrl}`);
+      this.logger.log(`[DEV MODE] Token: ${token}`);
+      return;
+    }
+
+    // Отправляем email в production
     try {
       await this.mailerService.sendMail({
         to: email,
@@ -66,12 +79,13 @@ export class EmailVerificationService {
           verificationUrl,
           token,
           expirationHours: this.tokenExpirationHours,
+          currentYear: new Date().getFullYear(),
         },
       });
+      this.logger.log(`Verification email sent to: ${email}`);
     } catch (error) {
       // Логируем ошибку, но не прерываем процесс
-      console.error('Failed to send verification email:', error);
-      // В продакшене можно использовать Logger
+      this.logger.error('Failed to send verification email:', error);
     }
   }
 
@@ -81,6 +95,34 @@ export class EmailVerificationService {
   async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
     if (!token) {
       throw new BadRequestException('Verification token is required');
+    }
+
+    // В development режиме обрабатываем специальный токен "111111"
+    if (isDevelopment() && token === '111111') {
+      this.logger.log('[DEV MODE] Using development token "111111" for email verification');
+      
+      // Находим последнего неверифицированного пользователя
+      const user = await this.prisma.user.findFirst({
+        where: { isVerified: false },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (!user) {
+        throw new NotFoundException('No unverified user found');
+      }
+
+      // Верифицируем пользователя
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: true },
+      });
+
+      this.logger.log(`[DEV MODE] Email verified for user: ${user.email} (ID: ${user.id})`);
+
+      return {
+        success: true,
+        message: 'Email successfully verified (development mode)',
+      };
     }
 
     // Находим запись о верификации

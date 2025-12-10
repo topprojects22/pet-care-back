@@ -9,6 +9,11 @@
         "include": "../upload",
         "outDir": "dist/public",
         "watchAssets": true
+      },
+      {
+        "include": "auth/templates/**/*",
+        "outDir": "dist/src",
+        "watchAssets": true
       }
     ],
     "watchAssets": true

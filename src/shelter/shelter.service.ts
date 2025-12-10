@@ -1,5 +1,5 @@
 // src/shelter/shelter.service.ts
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateShelterDto } from './dto/create-shelter.dto';
 import { UpdateShelterDto } from './dto/update-shelter.dto';
@@ -8,9 +8,12 @@ import { CreateDonationDto } from './dto/create-donation.dto';
 import { randomBytes } from 'crypto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
+import { isDevelopment } from '../common/utils/env.util';
 
 @Injectable()
 export class ShelterService {
+    private readonly logger = new Logger(ShelterService.name);
+
     constructor(
         private prisma: PrismaService,
         private mailerService: MailerService,
@@ -213,24 +216,44 @@ export class ShelterService {
                     select: { name: true, lastName: true, phone: true, email: true },
                 });
 
-                await this.mailerService.sendMail({
-                    to: shelter.owner.email,
-                    subject: 'Новая заявка на усыновление - Pet Care',
-                    template: 'adoption-request', // Нужно создать шаблон
-                    context: {
-                        shelterName: shelter.name,
-                        animalName: shelter.animals[0]?.name || 'животное',
-                        userName: `${user?.name || ''} ${user?.lastName || ''}`.trim(),
-                        userPhone: user?.phone || 'не указан',
-                        userEmail: user?.email || 'не указан',
-                        message: dto.adoptionReason || 'Сообщение не указано',
-                        adoptionRequestId: adoptionRequest.id,
-                    },
-                });
+                // В development режиме мокаем отправку email
+                if (isDevelopment()) {
+                    this.logger.log(
+                        `[DEV MODE] Adoption request email would be sent to: ${shelter.owner.email}`,
+                    );
+                    this.logger.log(
+                        `[DEV MODE] Shelter: ${shelter.name}, Animal: ${shelter.animals[0]?.name || 'животное'}`,
+                    );
+                    this.logger.log(
+                        `[DEV MODE] User: ${user?.name || ''} ${user?.lastName || ''}, Request ID: ${adoptionRequest.id}`,
+                    );
+                } else {
+                    // Отправляем email в production
+                    try {
+                        await this.mailerService.sendMail({
+                            to: shelter.owner.email,
+                            subject: 'Новая заявка на усыновление - Pet Care',
+                            template: 'adoption-request', // Нужно создать шаблон
+                            context: {
+                                shelterName: shelter.name,
+                                animalName: shelter.animals[0]?.name || 'животное',
+                                userName: `${user?.name || ''} ${user?.lastName || ''}`.trim(),
+                                userPhone: user?.phone || 'не указан',
+                                userEmail: user?.email || 'не указан',
+                                message: dto.adoptionReason || 'Сообщение не указано',
+                                adoptionRequestId: adoptionRequest.id,
+                            },
+                        });
+                        this.logger.log(`Adoption request email sent to: ${shelter.owner.email}`);
+                    } catch (error) {
+                        // Логируем ошибку, но не прерываем процесс
+                        this.logger.error('Failed to send adoption request email:', error);
+                    }
+                }
             }
         } catch (error) {
             // Логируем ошибку, но не прерываем процесс
-            console.error('Failed to send adoption request email:', error);
+            this.logger.error('Failed to process adoption request email:', error);
         }
 
         // Создаем уведомление для пользователя
